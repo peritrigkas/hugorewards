@@ -1,0 +1,9 @@
+{
+  "appId": "com.hugo.rewards",
+  "appName": "Hugo Rewards",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

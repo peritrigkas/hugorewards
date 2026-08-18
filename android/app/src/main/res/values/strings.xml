@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hugo Rewards</string>
+    <string name="title_activity_main">Hugo Rewards</string>
+    <string name="package_name">com.hugo.rewards</string>
+    <string name="custom_url_scheme">com.hugo.rewards</string>
+</resources>
