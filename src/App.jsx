@@ -10,6 +10,11 @@ import { BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
 
 const STAMPS_FOR_REWARD = 9;
 const STORAGE_KEY = "hugo_customer_code";
+const CUSTOMER_CODE_RE = /^HUGO-[0-9A-Z]{5}$/;
+// Hands-free hardware scanners can re-fire the same read (a shaky hand holding
+// the trigger, or a scanner without a configured reread delay) — ignore a repeat
+// of the same code within this window instead of double-stamping.
+const RESCAN_COOLDOWN_MS = 4000;
 // Basic deterrent, not real security — this ships inside the app bundle, so anyone
 // determined enough could find it. Fine for keeping casual customers out of the
 // staff view; replace with real Supabase Auth before this matters for real security.
@@ -712,6 +717,7 @@ function ScanPanel({ customers, onFoundCode }) {
   const detectorRef = useRef(null);
   const rafRef = useRef(null);
   const hardwareInputRef = useRef(null);
+  const lastScanRef = useRef({ code: "", at: 0 });
 
   const handleCode = async (raw) => {
     const result = await onFoundCode(raw.trim());
@@ -721,12 +727,24 @@ function ScanPanel({ customers, onFoundCode }) {
 
   // A wired (USB) or wireless (Bluetooth) hardware barcode/QR scanner acts as a
   // keyboard: it types the code into whatever's focused, then sends Enter. Keeping
-  // this field focused and submitting on Enter is all either kind needs to work.
+  // this field focused and submitting on Enter is all either kind needs to work,
+  // hands-free, alongside typing a code in manually.
   const submitManualCode = () => {
-    if (!manualCode.trim()) return;
-    handleCode(manualCode.trim());
+    const code = manualCode.trim().toUpperCase();
     setManualCode("");
     hardwareInputRef.current?.focus();
+    if (!code) return;
+    if (!CUSTOMER_CODE_RE.test(code)) {
+      setMessage("That doesn't look like a Hugo code — try scanning again.");
+      setTimeout(() => setMessage(""), 2500);
+      return;
+    }
+    const now = Date.now();
+    if (code === lastScanRef.current.code && now - lastScanRef.current.at < RESCAN_COOLDOWN_MS) {
+      return;
+    }
+    lastScanRef.current = { code, at: now };
+    handleCode(code);
   };
 
   // ---- Native path: Android's real camera pipeline via ML Kit, no black-frame issues ----
@@ -845,7 +863,7 @@ function ScanPanel({ customers, onFoundCode }) {
           <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
         </div>
         <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
-          A USB or Bluetooth barcode scanner also works here — keep this field focused and scan; it types the code and submits automatically.
+          A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only Hugo codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
         </p>
         {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
       </div>
@@ -892,7 +910,7 @@ function ScanPanel({ customers, onFoundCode }) {
         <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
       </div>
       <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
-        A USB or Bluetooth barcode scanner also works here — keep this field focused and scan; it types the code and submits automatically.
+        A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only Hugo codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
       </p>
       {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
     </div>
