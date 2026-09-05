@@ -5,17 +5,28 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- Capacitor / Cordova bridge (reflection-based plugin loading) ---
+-keep public class * extends com.getcapacitor.Plugin
+-keep @com.getcapacitor.annotation.CapacitorPlugin public class * { *; }
+-keepclassmembers class * {
+  @com.getcapacitor.annotation.CapacitorPlugin *;
+  @com.getcapacitor.PluginMethod public *;
+}
+-keep public class * extends org.apache.cordova.CordovaPlugin
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# JavascriptInterface methods exposed to the WebView
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Capacitor core + plugins
+-keep class com.getcapacitor.** { *; }
+-keep class com.hugo.rewards.** { *; }
+-keep class io.capacitor.** { *; }
+-keep class com.capacitorjs.** { *; }
+-dontwarn org.apache.cordova.**
+
+# Keep annotations / generics / source info for readable crash reports
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
