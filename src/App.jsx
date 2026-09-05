@@ -711,11 +711,22 @@ function ScanPanel({ customers, onFoundCode }) {
   const streamRef = useRef(null);
   const detectorRef = useRef(null);
   const rafRef = useRef(null);
+  const hardwareInputRef = useRef(null);
 
   const handleCode = async (raw) => {
     const result = await onFoundCode(raw.trim());
     setMessage(result.ok ? `✓ Added a stamp for ${result.name}` : result.message);
     setTimeout(() => setMessage(""), 2500);
+  };
+
+  // A wired (USB) or wireless (Bluetooth) hardware barcode/QR scanner acts as a
+  // keyboard: it types the code into whatever's focused, then sends Enter. Keeping
+  // this field focused and submitting on Enter is all either kind needs to work.
+  const submitManualCode = () => {
+    if (!manualCode.trim()) return;
+    handleCode(manualCode.trim());
+    setManualCode("");
+    hardwareInputRef.current?.focus();
   };
 
   // ---- Native path: Android's real camera pipeline via ML Kit, no black-frame issues ----
@@ -806,6 +817,12 @@ function ScanPanel({ customers, onFoundCode }) {
 
   useEffect(() => (isNative ? undefined : stopBrowserScan), []);
 
+  // Keep the hardware-scanner field focused whenever the camera isn't the active
+  // input, so a wired/wireless scanner can be used without tapping the screen first.
+  useEffect(() => {
+    if (isNative || !scanning) hardwareInputRef.current?.focus();
+  }, [isNative, scanning]);
+
   if (isNative) {
     return (
       <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid #ECE0F5", borderRadius: 18, padding: 20 }}>
@@ -817,9 +834,19 @@ function ScanPanel({ customers, onFoundCode }) {
           Opens your phone's camera to scan a customer's QR code directly.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
-          <input value={manualCode} onChange={(e) => setManualCode(e.target.value)} placeholder="Or type code, e.g. HUGO-A1B2C" style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 13 }} />
-          <button onClick={() => { if (manualCode.trim()) { handleCode(manualCode.trim()); setManualCode(""); } }} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
+          <input
+            ref={hardwareInputRef}
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") submitManualCode(); }}
+            placeholder="Type a code, or scan with a wired/wireless scanner"
+            style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 13 }}
+          />
+          <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
         </div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
+          A USB or Bluetooth barcode scanner also works here — keep this field focused and scan; it types the code and submits automatically.
+        </p>
         {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
       </div>
     );
@@ -854,9 +881,19 @@ function ScanPanel({ customers, onFoundCode }) {
       )}
       {!supported && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#8A2E2E", marginBottom: 12 }}>Camera QR scanning needs Chrome or Edge. Enter the customer's code below as a fallback.</p>}
       <div style={{ display: "flex", gap: 8 }}>
-        <input value={manualCode} onChange={(e) => setManualCode(e.target.value)} placeholder="Or type code, e.g. HUGO-A1B2C" style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 13 }} />
-        <button onClick={() => { if (manualCode.trim()) { handleCode(manualCode.trim()); setManualCode(""); } }} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
+        <input
+          ref={hardwareInputRef}
+          value={manualCode}
+          onChange={(e) => setManualCode(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submitManualCode(); }}
+          placeholder="Type a code, or scan with a wired/wireless scanner"
+          style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 13 }}
+        />
+        <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
       </div>
+      <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
+        A USB or Bluetooth barcode scanner also works here — keep this field focused and scan; it types the code and submits automatically.
+      </p>
       {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
     </div>
   );
