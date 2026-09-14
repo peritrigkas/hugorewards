@@ -7,10 +7,11 @@ import {
 import { supabase } from "./supabaseClient";
 import { Capacitor } from "@capacitor/core";
 import { BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
+import { clientConfig } from "./client.config";
 
-const STAMPS_FOR_REWARD = 9;
-const STORAGE_KEY = "hugo_customer_code";
-const CUSTOMER_CODE_RE = /^HUGO-[0-9A-Z]{5}$/;
+const STAMPS_FOR_REWARD = clientConfig.loyalty.stampsForReward;
+const STORAGE_KEY = `${clientConfig.id}_customer_code`;
+const CUSTOMER_CODE_RE = new RegExp(`^${clientConfig.loyalty.codePrefix}-[0-9A-Z]{5}$`);
 // Hands-free hardware scanners can re-fire the same read (a shaky hand holding
 // the trigger, or a scanner without a configured reread delay) — ignore a repeat
 // of the same code within this window instead of double-stamping.
@@ -18,10 +19,10 @@ const RESCAN_COOLDOWN_MS = 4000;
 // Basic deterrent, not real security — this ships inside the app bundle, so anyone
 // determined enough could find it. Fine for keeping casual customers out of the
 // staff view; replace with real Supabase Auth before this matters for real security.
-const STAFF_PIN = "4269";
+const STAFF_PIN = clientConfig.staffPin;
 
 function makeCode() {
-  return `HUGO-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  return `${clientConfig.loyalty.codePrefix}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
 
 function CowMark({ size = 40, style }) {
@@ -121,7 +122,7 @@ function TopBar({ onBack, onMenu, onSecretTap, onAccount }) {
         onClick={onSecretTap}
         style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 26, color: "#F6EEDF", userSelect: "none" }}
       >
-        Hugo
+        {clientConfig.brandName}
       </div>
       <User color="#F6EEDF" size={24} onClick={onAccount} style={{ cursor: onAccount ? "pointer" : "default" }} />
     </div>
@@ -196,9 +197,9 @@ function JoinScreen({ onJoin }) {
     <div style={{ background: "#F6EEDF", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 360, width: "100%", textAlign: "center" }}>
         <CowMark size={72} style={{ margin: "0 auto 16px" }} />
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 30, color: "#1A1420", marginBottom: 6 }}>Hugo</div>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 30, color: "#1A1420", marginBottom: 6 }}>{clientConfig.brandName}</div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#6E5A73", marginBottom: 24 }}>
-          Join up — buy 9, the 10th's on the cow.
+          {clientConfig.joinTagline}
         </div>
         <input style={inputStyle} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
         <input style={inputStyle} placeholder="Phone or email" value={contact} onChange={(e) => setContact(e.target.value)} />
@@ -214,10 +215,10 @@ function JoinScreen({ onJoin }) {
           }}
           style={{ width: "100%", background: name && contact && !busy ? "#1A1420" : "#D8C3E8", color: "#F6EEDF", border: "none", padding: "14px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, cursor: name && contact && !busy ? "pointer" : "not-allowed" }}
         >
-          {busy ? "Joining…" : "Join Hugo Rewards"}
+          {busy ? "Joining…" : `Join ${clientConfig.fullBrandName}`}
         </button>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93", marginTop: 14 }}>
-          Already joined? Enter the same phone or email to get your card back.
+          {clientConfig.joinReturningNote}
         </div>
       </div>
     </div>
@@ -241,7 +242,7 @@ function Greeting({ customer }) {
         Hey {customer.name.split(" ")[0]}!
       </div>
       <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#6E5A73", marginBottom: 22 }}>
-        Keep on mooing for more rewards!
+        {clientConfig.greetingSubtitle}
       </div>
       <div style={{ display: "flex" }}>
         <StatBlock value={customer.stamps} label="Stamps" emoji="☕" />
@@ -259,9 +260,12 @@ function HeroBanner() {
     <div style={{ margin: "0 0 24px", background: "linear-gradient(160deg, #D8C3E8 0%, #C9A8DC 100%)", padding: "50px 24px", textAlign: "center" }}>
       <CowMark size={90} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 40, color: "#1A1420", lineHeight: 1.05 }}>
-        Offbeat
-        <br />
-        Coffee
+        {clientConfig.hero.titleLines.map((line, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <br />}
+            {line}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
@@ -271,9 +275,12 @@ function SwirlDivider() {
   return (
     <div style={{ height: 200, margin: "0 0 32px", position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 34, color: "#F6EEDF", textAlign: "center", lineHeight: 1.1 }}>
-        Small batch.
-        <br />
-        Big mood.
+        {clientConfig.hero.swirlLines.map((line, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <br />}
+            {line}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
@@ -287,7 +294,7 @@ function EarnRewardsCard({ onView }) {
           <CowMark size={140} />
         </div>
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 26, color: "#1A1420", marginBottom: 10, position: "relative" }}>Earn Rewards</div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#3D2B45", marginBottom: 22, position: "relative" }}>Buy 9, the 10th's on the cow.</div>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#3D2B45", marginBottom: 22, position: "relative" }}>{clientConfig.loyalty.earnCardBody}</div>
         <button style={{ background: "#1A1420", color: "#F6EEDF", border: "none", padding: "12px 28px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer", position: "relative" }}>
           View Rewards
         </button>
@@ -297,11 +304,7 @@ function EarnRewardsCard({ onView }) {
 }
 
 function MenuStrip() {
-  const items = [
-    { name: "The Usual", tag: "house oat latte", bg: "#F6EEDF" },
-    { name: "Purple Day", tag: "ube cold foam", bg: "#D8C3E8" },
-    { name: "Cow in Green", tag: "mint matcha", bg: "#C9DDB8" },
-  ];
+  const items = clientConfig.menuStrip;
   return (
     <div style={{ padding: "0 20px", marginBottom: 32 }}>
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "#1A1420", marginBottom: 14 }}>On the menu</div>
@@ -328,7 +331,7 @@ function ProgressSection({ customer }) {
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "#D9A441", fontWeight: 700, whiteSpace: "nowrap" }}>{customer.stamps}/{STAMPS_FOR_REWARD}</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", marginBottom: 8 }}>Collect {STAMPS_FOR_REWARD} stamps for a free coffee</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", marginBottom: 8 }}>{clientConfig.loyalty.progressLabel(STAMPS_FOR_REWARD)}</div>
           <div style={{ position: "relative" }}>
             <div style={{ height: 14, borderRadius: 999, background: "#ECE0F5", border: "2px solid #1A1420", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: "#D9A441", borderRadius: 999, transition: "width 0.3s ease" }} />
@@ -394,11 +397,7 @@ function PromoCard({ title, body, cta, bg, color, onClick }) {
 }
 
 function HowToEarn() {
-  const steps = [
-    { n: 1, title: "REGISTER", body: "Sign up for Hugo Rewards and get a free coffee just for joining, plus a treat on your birthday." },
-    { n: 2, title: "VISIT US", body: "Collect a stamp on every visit. Just show your code when you order." },
-    { n: 3, title: "REDEEM", body: "Buy 9 coffees, the 10th's on the cow. Simple as that." },
-  ];
+  const steps = clientConfig.howToEarn;
   return (
     <div style={{ padding: "8px 20px 32px" }}>
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "#1A1420", marginBottom: 18 }}>How to start earning</div>
@@ -417,7 +416,7 @@ function RewardsHome({ goToCards, goToGifts }) {
     <div style={{ paddingBottom: 100 }}>
       <RewardsHero />
       <div style={{ height: 20 }} />
-      <PromoCard title="MY LOYALTY CARDS" body="Get a stamp on your Hugo card for every coffee — buy 9, and the 10th's on the cow." cta="VIEW CARDS" bg="#1A1420" color="#F6EEDF" onClick={goToCards} />
+      <PromoCard title="MY LOYALTY CARDS" body={`Get a stamp on your ${clientConfig.brandName} card for every coffee — buy 9, and the 10th's on the cow.`} cta="VIEW CARDS" bg="#1A1420" color="#F6EEDF" onClick={goToCards} />
       <PromoCard title="MY GIFTS" body="Check what's waiting for you — like a free coffee on your birthday." cta="VIEW GIFT LIST" bg="#D9A441" color="#1A1420" onClick={goToGifts} />
       <HowToEarn />
     </div>
@@ -438,7 +437,7 @@ function LoyaltyCardDetail({ customer }) {
       {tab === "active" ? (
         <div style={{ padding: "24px 20px" }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid #ECE0F5", boxShadow: "0 8px 24px rgba(26,20,32,0.08)" }}>
-            <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", marginBottom: 16 }}>Hugo Loyalty Card</div>
+            <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", marginBottom: 16 }}>{clientConfig.brandName} Loyalty Card</div>
             <CowStampCard stamps={customer.stamps} />
             <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93", marginTop: 12 }}>Code: {customer.code}</div>
           </div>
@@ -462,8 +461,8 @@ function GiftsView() {
             <Gift color="#1A1420" size={24} />
           </div>
           <div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Birthday Coffee</div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#3D2B45", marginTop: 2 }}>Free drink of your choice — valid all week of your birthday</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>{clientConfig.gift.title}</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#3D2B45", marginTop: 2 }}>{clientConfig.gift.body}</div>
           </div>
         </div>
         <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "#8B7A93", marginTop: 24 }}>
@@ -501,11 +500,7 @@ function ScanCodeScreen({ customer }) {
 }
 
 function MenuScreen() {
-  const categories = [
-    { title: "Coffee", body: "A small, considered coffee list pulled from our own house blend — proper speciality coffee, no fuss, made the way you like it." },
-    { title: "Matcha", body: "Stone-ground ceremonial matcha, whisked to order. Earthy, vibrant, and never bitter — hot or over ice." },
-    { title: "Food", body: "A short, honest food menu made fresh to order — think a proper sandwich and something warm on toast, not a hundred things done half-heartedly." },
-  ];
+  const categories = clientConfig.menu.categories;
   return (
     <div style={{ paddingBottom: 100 }}>
       <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -513,7 +508,7 @@ function MenuScreen() {
       </div>
       <div style={{ padding: "28px 20px" }}>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 15, color: "#1A1420", lineHeight: 1.6, marginBottom: 32 }}>
-          Hugo keeps things small and offbeat rather than trying to be everything — a short menu, done properly, adapted for dietary requirements on request.
+          {clientConfig.menu.intro}
         </div>
         {categories.map((c) => (
           <div key={c.title} style={{ marginBottom: 26 }}>
@@ -524,7 +519,7 @@ function MenuScreen() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, padding: "16px 4px 0", borderTop: "1px solid #ECE0F5" }}>
           <CowMark size={30} />
           <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93", lineHeight: 1.5 }}>
-            Ask in store for today's specials — the board changes more often than this page does.
+            {clientConfig.menu.footerNote}
           </div>
         </div>
       </div>
@@ -543,28 +538,28 @@ function VisitScreen() {
           <CowMark size={70} />
         </div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#1A1420", textAlign: "center", lineHeight: 1.6, marginBottom: 28 }}>
-          One shop, in the West Village. Come find the purple building, mind the cow.
+          {clientConfig.location.intro}
         </div>
         <div style={{ background: "#fff", borderRadius: 20, border: "1px solid #ECE0F5", padding: "22px 20px", marginBottom: 20 }}>
           <div style={{ display: "flex", gap: 14, marginBottom: 20 }}>
             <MapPin color="#D9A441" size={22} style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
               <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Address</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>17 Perry St, New York, NY 10014</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>{clientConfig.location.address}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 14, marginBottom: 20 }}>
             <div style={{ width: 22, textAlign: "center", flexShrink: 0, fontSize: 16 }}>🕐</div>
             <div>
               <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Hours</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>7am – 7pm, every day</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>{clientConfig.location.hours}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 14 }}>
             <div style={{ width: 22, textAlign: "center", flexShrink: 0, fontSize: 16 }}>📞</div>
             <div>
               <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Contact</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>212-COW-HUGO</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>{clientConfig.location.phone}</div>
             </div>
           </div>
         </div>
@@ -735,7 +730,7 @@ function ScanPanel({ customers, onFoundCode }) {
     hardwareInputRef.current?.focus();
     if (!code) return;
     if (!CUSTOMER_CODE_RE.test(code)) {
-      setMessage("That doesn't look like a Hugo code — try scanning again.");
+      setMessage(`That doesn't look like a ${clientConfig.brandName} code — try scanning again.`);
       setTimeout(() => setMessage(""), 2500);
       return;
     }
@@ -863,7 +858,7 @@ function ScanPanel({ customers, onFoundCode }) {
           <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
         </div>
         <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
-          A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only Hugo codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
+          A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only {clientConfig.brandName} codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
         </p>
         {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
       </div>
@@ -910,7 +905,7 @@ function ScanPanel({ customers, onFoundCode }) {
         <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
       </div>
       <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
-        A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only Hugo codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
+        A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only {clientConfig.brandName} codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
       </p>
       {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
     </div>
@@ -1008,7 +1003,7 @@ function OwnerApp({ onExit }) {
   return (
     <div style={{ background: "#F6EEDF", minHeight: "100vh", padding: "0 0 40px", fontFamily: "Inter, sans-serif" }}>
       <div style={{ background: "#1A1420", padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 22, color: "#F6EEDF" }}>Hugo — Staff</div>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 22, color: "#F6EEDF" }}>{clientConfig.brandName} — Staff</div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={signOut} style={{ background: "transparent", color: "#D8C3E8", border: "1px solid #D8C3E8", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
             Sign out
@@ -1086,7 +1081,7 @@ function LoadingScreen() {
           animation: "moo-fade 0.6s ease-out 0.15s both",
         }}
       >
-        Hugo
+        {clientConfig.brandName}
       </div>
       <div
         style={{
@@ -1099,7 +1094,7 @@ function LoadingScreen() {
           animation: "moo-fade 0.6s ease-out 0.3s both",
         }}
       >
-        You're just a moo away from making your day amazing.
+        {clientConfig.loadingMessage}
       </div>
     </div>
   );

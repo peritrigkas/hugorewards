@@ -333,11 +333,10 @@ runs on macOS. Options, roughly cheapest first:
   you have 1 or 10 clients**, plus an optional $0–25/mo Supabase bill once usage grows — which
   comfortably supports either a one-off sale price or a small £5–10/mo tier later.
 
-## 7. Remaining open question
+## 7. iOS CI — decided
 
-- For the iOS build pipeline specifically: do you want to set up CI (GitHub Actions/Codemagic)
-  now as part of this phase, or defer it and build the very first iOS release manually (e.g., a
-  borrowed Mac or a one-off cloud Mac rental) until there's a second client confirming it's
-  worth automating? Either is reasonable — CI upfront costs a few extra days of setup now but
-  pays off after the 2nd or 3rd client; doing it manually first is faster to a first iOS release
-  but means redoing the packaging work by hand each time until you automate it.
+**Deferred.** Build the first iOS release manually (borrowed Mac or a one-off cloud Mac rental),
+and only set up CI (Codemagic's free tier is the likely pick, or GitHub Actions macOS runners)
+once a second client confirms it's worth automating. This adds no drastic rework later — CI is
+just an automation wrapper around the same Xcode build/sign/export steps, so nothing built
+manually now is thrown away when CI is added.
