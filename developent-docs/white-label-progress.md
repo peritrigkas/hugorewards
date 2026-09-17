@@ -7,6 +7,8 @@ white-label feature ships or a decision changes from the original strategy.
 
 **Status legend:** ✅ Done · 🚧 In progress · ⏳ Not started · ⏸️ Deferred
 
+**Test environment:** a scratch Supabase project, "Hugo White-Label Scratch" (project ref `fjclbclxdecxqiqvbfhj`, same `Hugo` org as the live pilot project, free tier), exists for testing schema/RLS changes before they ever touch the live Hugo project. Reuse it for further Epic 2 work rather than creating another.
+
 ---
 
 ## Epic 1: Config-driven codebase (Option A groundwork)
@@ -30,10 +32,10 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 
 | Feature | Status | PR |
 |---|---|---|
-| `tenants` table schema design | 🚧 Drafted (`supabase-schema-tenants.sql`), not yet applied to the live project | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
-| `tenant_id` added to `customers` + backfill Hugo's row | 🚧 Drafted, same file | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
-| RLS policies scoped by `tenant_id` | 🚧 Drafted, same file — see decisions log re: role-scoped policies | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
-| Staff auth → tenant mapping (`staff_tenant` table) | 🚧 Drafted, same file | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| `tenants` table schema design | ✅ Verified against scratch Supabase project ("Hugo White-Label Scratch"), not yet applied to the live project | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
+| `tenant_id` added to `customers` + backfill Hugo's row | ✅ Verified, same migration | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| RLS policies scoped by `tenant_id` | ✅ Verified — confirmed each policy applies to exactly one of anon/authenticated, security advisories clean | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
+| Staff auth → tenant mapping (`staff_tenant` table) | ✅ Verified, same migration | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ⏳ Not started | — |
 
 ## Epic 3: Distribution — per-client packaging (C2)
@@ -67,6 +69,8 @@ section it updates or overrides.
 | 2026-09-17 | CSS-variable pass covers UI chrome only, not the cow mascot SVG or QR canvas | Those are illustration assets tied to Hugo's specific artwork — swapping them per client is a distinct asset-swap phase, not a palette change | §2 (Brand identity: Logo/icon) |
 | 2026-09-17 | `tenants`/`customers`/`staff_tenant` RLS policies scoped explicitly `to anon` / `to authenticated` rather than left role-unscoped | Postgres OR's permissive policies for the same command together — a role-unscoped `using (true)` public-read policy would silently also apply to authenticated staff and defeat tenant isolation. Explicit role scoping is what actually enforces "staff only see their own tenant's customers" | §3 Option B (RLS/tenant isolation is "dangerous to get subtly wrong") |
 | 2026-09-17 | `supabase-schema-tenants.sql` migration written but deliberately NOT applied to the live Hugo project yet | No point running it before `App.jsx` has tenant-resolution logic to use it; drafted first for review since this is the highest-risk piece of the whole plan | §3 Option B |
+| 2026-09-17 | Created a new scratch Supabase project ("Hugo White-Label Scratch", same `Hugo` org) and applied the tenants migration there for real testing | Needed a real database to verify RLS behavior against, without any risk to Hugo's live pilot data | §3 Option B |
+| 2026-09-17 | Moved the `current_staff_tenant_id` helper into a `private` (non-API-exposed) schema, pinned its `search_path`, and restricted `EXECUTE` to `authenticated` only | Supabase's security advisor flagged the function as callable directly via `/rest/v1/rpc/` by anon and authenticated clients, and with a mutable search_path — both are real hardening issues for a `SECURITY DEFINER` function, even though this particular function only ever returns the caller's own tenant mapping | §3 Option B |
 
 ## Deviations from the original strategy doc
 
