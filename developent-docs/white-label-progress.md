@@ -30,10 +30,10 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 
 | Feature | Status | PR |
 |---|---|---|
-| `tenants` table schema design | ⏳ Not started | — |
-| `tenant_id` added to `customers` + backfill Hugo's row | ⏳ Not started | — |
-| RLS policies scoped by `tenant_id` | ⏳ Not started | — |
-| Staff auth → tenant mapping | ⏳ Not started | — |
+| `tenants` table schema design | 🚧 Drafted (`supabase-schema-tenants.sql`), not yet applied to the live project | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| `tenant_id` added to `customers` + backfill Hugo's row | 🚧 Drafted, same file | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| RLS policies scoped by `tenant_id` | 🚧 Drafted, same file — see decisions log re: role-scoped policies | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| Staff auth → tenant mapping (`staff_tenant` table) | 🚧 Drafted, same file | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ⏳ Not started | — |
 
 ## Epic 3: Distribution — per-client packaging (C2)
@@ -65,6 +65,8 @@ section it updates or overrides.
 | 2026-09-14 | iOS CI setup deferred until a 2nd client | First release built manually; CI only pays off once there's a build to repeat. No rework needed to add CI later — it wraps the same manual steps | §7 |
 | 2026-09-14 | Config extraction scoped to content/copy only for the first pass; colors and mascot artwork explicitly excluded | Keeps the refactor reviewable in one PR; strategy doc itself lists these as separate line items (content extraction vs. CSS variable pass) | §3, Option A steps |
 | 2026-09-17 | CSS-variable pass covers UI chrome only, not the cow mascot SVG or QR canvas | Those are illustration assets tied to Hugo's specific artwork — swapping them per client is a distinct asset-swap phase, not a palette change | §2 (Brand identity: Logo/icon) |
+| 2026-09-17 | `tenants`/`customers`/`staff_tenant` RLS policies scoped explicitly `to anon` / `to authenticated` rather than left role-unscoped | Postgres OR's permissive policies for the same command together — a role-unscoped `using (true)` public-read policy would silently also apply to authenticated staff and defeat tenant isolation. Explicit role scoping is what actually enforces "staff only see their own tenant's customers" | §3 Option B (RLS/tenant isolation is "dangerous to get subtly wrong") |
+| 2026-09-17 | `supabase-schema-tenants.sql` migration written but deliberately NOT applied to the live Hugo project yet | No point running it before `App.jsx` has tenant-resolution logic to use it; drafted first for review since this is the highest-risk piece of the whole plan | §3 Option B |
 
 ## Deviations from the original strategy doc
 
