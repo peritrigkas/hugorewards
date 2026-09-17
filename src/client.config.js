@@ -1,10 +1,29 @@
-// Per-client content and copy. Colors/fonts and the cow mascot artwork stay in
-// App.jsx for now — those are a separate theming/asset-swap pass (see
-// developent-docs/white-label-strategy.md, step 3 of Option A).
+// Per-client content, copy, and palette. The cow mascot artwork and the QR
+// canvas stay hardcoded in App.jsx for now — swapping those per client is a
+// separate asset-swap pass (see developent-docs/white-label-strategy.md).
 export const clientConfig = {
   id: "hugo",
   brandName: "Hugo",
   fullBrandName: "Hugo Rewards",
+
+  // Applied as CSS custom properties (--c-<key>) at the app root — every
+  // color used outside the mascot/QR artwork reads from these.
+  colors: {
+    dark: "#1A1420",
+    darkAlt: "#3D2B45",
+    cream: "#F6EEDF",
+    lilac: "#D8C3E8",
+    purple: "#C9A8DC",
+    gold: "#D9A441",
+    muted: "#6E5A73",
+    faint: "#8B7A93",
+    border: "#ECE0F5",
+    divider: "#E3D5ED",
+    inactive: "#B8ACC0",
+    error: "#8A2E2E",
+    errorBg: "#FBEAEA",
+    errorBorder: "#E3B8B8",
+  },
 
   joinTagline: "Join up — buy 9, the 10th's on the cow.",
   joinReturningNote: "Already joined? Enter the same phone or email to get your card back.",
