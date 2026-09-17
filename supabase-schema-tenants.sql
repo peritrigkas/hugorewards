@@ -1,10 +1,14 @@
 -- Multi-tenant backend migration (white-label Option B — see
 -- developent-docs/white-label-strategy.md §3 and white-label-progress.md
--- Epic 2). Design-only for now: NOT YET APPLIED to the live Hugo pilot
--- project. Run this only once the frontend's tenant-resolution work lands
--- alongside it — applying it alone doesn't break the running app (every
--- policy change here is additive/scoped), but there's no point running it
--- before App.jsx knows how to fetch and use a tenant row.
+-- Epic 2). Verified against a scratch Supabase project ("Hugo White-Label
+-- Scratch") — applies cleanly, tenant-scoped RLS policies confirmed correct
+-- (each policy applies to exactly one of anon/authenticated, never both),
+-- and `get_advisors` security lints are clean. NOT YET APPLIED to the live
+-- Hugo pilot project — run it there only once the frontend's
+-- tenant-resolution work lands alongside it; applying it alone doesn't
+-- break the running app (every change here is additive/scoped), but
+-- there's no point running it before App.jsx knows how to fetch and use a
+-- tenant row.
 --
 -- Run this AFTER supabase-schema.sql in a fresh project, or against the
 -- existing Hugo project to upgrade it in place — it's written to be safe
@@ -50,14 +54,25 @@ create table if not exists staff_tenant (
   tenant_id uuid not null references tenants(id) on delete cascade
 );
 
-create or replace function current_staff_tenant_id()
+-- Lives in a `private` schema (not exposed via the PostgREST API) rather
+-- than `public` — a SECURITY DEFINER helper only meant to be called from
+-- inside RLS policies shouldn't also be directly callable as an RPC by
+-- anon/authenticated clients. `set search_path` pins it against search-path
+-- hijacking, per Supabase's function security guidance.
+create schema if not exists private;
+
+create or replace function private.current_staff_tenant_id()
 returns uuid
 language sql
 security definer
 stable
+set search_path = public
 as $$
   select tenant_id from staff_tenant where user_id = auth.uid();
 $$;
+
+grant usage on schema private to authenticated;
+grant execute on function private.current_staff_tenant_id() to authenticated;
 
 -- 4. RLS ----------------------------------------------------------------
 alter table tenants enable row level security;
@@ -109,9 +124,9 @@ create policy "Public delete (anon, own trust model)" on customers
 -- Staff can only see and update customers in their own tenant — this is the
 -- policy that actually enforces isolation between clients.
 create policy "Staff read own tenant" on customers
-  for select to authenticated using (tenant_id = current_staff_tenant_id());
+  for select to authenticated using (tenant_id = private.current_staff_tenant_id());
 
 create policy "Staff update own tenant" on customers
   for update to authenticated
-  using (tenant_id = current_staff_tenant_id())
-  with check (tenant_id = current_staff_tenant_id());
+  using (tenant_id = private.current_staff_tenant_id())
+  with check (tenant_id = private.current_staff_tenant_id());
