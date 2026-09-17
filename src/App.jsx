@@ -112,19 +112,19 @@ function QrCanvas({ value, size = 200 }) {
 
 function TopBar({ onBack, onMenu, onSecretTap, onAccount }) {
   return (
-    <div style={{ background: "#1A1420", padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ background: "var(--c-dark)", padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       {onBack ? (
-        <ChevronLeft color="#F6EEDF" size={24} onClick={onBack} style={{ cursor: "pointer" }} />
+        <ChevronLeft color="var(--c-cream)" size={24} onClick={onBack} style={{ cursor: "pointer" }} />
       ) : (
-        <Menu color="#F6EEDF" size={24} onClick={onMenu} style={{ cursor: "pointer" }} />
+        <Menu color="var(--c-cream)" size={24} onClick={onMenu} style={{ cursor: "pointer" }} />
       )}
       <div
         onClick={onSecretTap}
-        style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 26, color: "#F6EEDF", userSelect: "none" }}
+        style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 26, color: "var(--c-cream)", userSelect: "none" }}
       >
         {clientConfig.brandName}
       </div>
-      <User color="#F6EEDF" size={24} onClick={onAccount} style={{ cursor: onAccount ? "pointer" : "default" }} />
+      <User color="var(--c-cream)" size={24} onClick={onAccount} style={{ cursor: onAccount ? "pointer" : "default" }} />
     </div>
   );
 }
@@ -140,20 +140,20 @@ function DrawerMenu({ open, onClose, navigate }) {
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,20,32,0.5)", opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none", transition: "opacity 0.25s ease", zIndex: 40 }} />
-      <div style={{ position: "fixed", top: 0, bottom: 0, left: 0, width: "78%", maxWidth: 320, background: "#F6EEDF", zIndex: 50, transform: open ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.28s ease", boxShadow: open ? "4px 0 24px rgba(0,0,0,0.2)" : "none", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "fixed", top: 0, bottom: 0, left: 0, width: "78%", maxWidth: 320, background: "var(--c-cream)", zIndex: 50, transform: open ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.28s ease", boxShadow: open ? "4px 0 24px rgba(0,0,0,0.2)" : "none", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "20px 20px 24px" }}>
-          <X color="#1A1420" size={24} onClick={onClose} style={{ cursor: "pointer" }} />
+          <X color="var(--c-dark)" size={24} onClick={onClose} style={{ cursor: "pointer" }} />
         </div>
         {items.map((item) => (
           <div key={item.screen} onClick={() => { navigate(item.screen); onClose(); }} style={{ display: "flex", alignItems: "center", gap: 20, padding: "16px 24px", cursor: "pointer" }}>
-            <item.icon color="#D9A441" size={24} />
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 17, color: "#1A1420" }}>{item.label}</span>
+            <item.icon color="var(--c-gold)" size={24} />
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 17, color: "var(--c-dark)" }}>{item.label}</span>
           </div>
         ))}
         <div style={{ marginTop: "auto", padding: "24px", display: "flex", gap: 12, justifyContent: "center" }}>
           {[Facebook, Music2, Instagram].map((Icon, i) => (
-            <div key={i} style={{ width: 40, height: 40, borderRadius: "50%", background: "#D9A441", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon color="#1A1420" size={18} />
+            <div key={i} style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--c-gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon color="var(--c-dark)" size={18} />
             </div>
           ))}
         </div>
@@ -172,13 +172,13 @@ function BottomNav({ screen, navigate }) {
   ];
   const rewardsGroup = ["rewards", "cards", "gifts"];
   return (
-    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid #ECE0F5", display: "flex", padding: "10px 4px 14px", maxWidth: 420, margin: "0 auto", zIndex: 10 }}>
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid var(--c-border)", display: "flex", padding: "10px 4px 14px", maxWidth: 420, margin: "0 auto", zIndex: 10 }}>
       {tabs.map((t, i) => {
         const isActive = t.screen === "rewards" ? rewardsGroup.includes(screen) : t.screen === screen;
         return (
           <div key={i} onClick={() => navigate(t.screen)} style={{ flex: 1, textAlign: "center", cursor: "pointer" }}>
-            <t.icon color={isActive ? "#D9A441" : "#B8ACC0"} size={22} style={{ margin: "0 auto" }} />
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: isActive ? "#D9A441" : "#B8ACC0", marginTop: 4 }}>{t.label}</div>
+            <t.icon color={isActive ? "var(--c-gold)" : "var(--c-inactive)"} size={22} style={{ margin: "0 auto" }} />
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: isActive ? "var(--c-gold)" : "var(--c-inactive)", marginTop: 4 }}>{t.label}</div>
           </div>
         );
       })}
@@ -191,19 +191,19 @@ function JoinScreen({ onJoin }) {
   const [contact, setContact] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 15, marginBottom: 14, boxSizing: "border-box" };
+  const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 15, marginBottom: 14, boxSizing: "border-box" };
 
   return (
-    <div style={{ background: "#F6EEDF", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ background: "var(--c-cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 360, width: "100%", textAlign: "center" }}>
         <CowMark size={72} style={{ margin: "0 auto 16px" }} />
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 30, color: "#1A1420", marginBottom: 6 }}>{clientConfig.brandName}</div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#6E5A73", marginBottom: 24 }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 30, color: "var(--c-dark)", marginBottom: 6 }}>{clientConfig.brandName}</div>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-muted)", marginBottom: 24 }}>
           {clientConfig.joinTagline}
         </div>
         <input style={inputStyle} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
         <input style={inputStyle} placeholder="Phone or email" value={contact} onChange={(e) => setContact(e.target.value)} />
-        {error && <p style={{ fontFamily: "Inter, sans-serif", color: "#8A2E2E", fontSize: 13, marginTop: -6, marginBottom: 12 }}>{error}</p>}
+        {error && <p style={{ fontFamily: "Inter, sans-serif", color: "var(--c-error)", fontSize: 13, marginTop: -6, marginBottom: 12 }}>{error}</p>}
         <button
           disabled={!name || !contact || busy}
           onClick={async () => {
@@ -213,11 +213,11 @@ function JoinScreen({ onJoin }) {
             setBusy(false);
             if (!ok) setError("Couldn't join right now — check your connection and try again.");
           }}
-          style={{ width: "100%", background: name && contact && !busy ? "#1A1420" : "#D8C3E8", color: "#F6EEDF", border: "none", padding: "14px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, cursor: name && contact && !busy ? "pointer" : "not-allowed" }}
+          style={{ width: "100%", background: name && contact && !busy ? "var(--c-dark)" : "var(--c-lilac)", color: "var(--c-cream)", border: "none", padding: "14px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, cursor: name && contact && !busy ? "pointer" : "not-allowed" }}
         >
           {busy ? "Joining…" : `Join ${clientConfig.fullBrandName}`}
         </button>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93", marginTop: 14 }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)", marginTop: 14 }}>
           {clientConfig.joinReturningNote}
         </div>
       </div>
@@ -228,8 +228,8 @@ function JoinScreen({ onJoin }) {
 function StatBlock({ value, label, emoji }) {
   return (
     <div style={{ textAlign: "center", flex: 1 }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 26, color: "#1A1420", fontWeight: 700 }}>{value}</div>
-      <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 26, color: "var(--c-dark)", fontWeight: 700 }}>{value}</div>
+      <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 18 }}>{emoji}</div>
     </div>
   );
@@ -238,17 +238,17 @@ function StatBlock({ value, label, emoji }) {
 function Greeting({ customer }) {
   return (
     <div style={{ padding: "28px 20px 20px", textAlign: "center" }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "#1A1420", marginBottom: 4 }}>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "var(--c-dark)", marginBottom: 4 }}>
         Hey {customer.name.split(" ")[0]}!
       </div>
-      <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#6E5A73", marginBottom: 22 }}>
+      <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-muted)", marginBottom: 22 }}>
         {clientConfig.greetingSubtitle}
       </div>
       <div style={{ display: "flex" }}>
         <StatBlock value={customer.stamps} label="Stamps" emoji="☕" />
-        <div style={{ width: 1, background: "#E3D5ED" }} />
+        <div style={{ width: 1, background: "var(--c-divider)" }} />
         <StatBlock value="0" label="Gift List" emoji="🎁" />
-        <div style={{ width: 1, background: "#E3D5ED" }} />
+        <div style={{ width: 1, background: "var(--c-divider)" }} />
         <StatBlock value="1" label="Cards" emoji="🐮" />
       </div>
     </div>
@@ -257,9 +257,9 @@ function Greeting({ customer }) {
 
 function HeroBanner() {
   return (
-    <div style={{ margin: "0 0 24px", background: "linear-gradient(160deg, #D8C3E8 0%, #C9A8DC 100%)", padding: "50px 24px", textAlign: "center" }}>
+    <div style={{ margin: "0 0 24px", background: "linear-gradient(160deg, var(--c-lilac) 0%, var(--c-purple) 100%)", padding: "50px 24px", textAlign: "center" }}>
       <CowMark size={90} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 40, color: "#1A1420", lineHeight: 1.05 }}>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 40, color: "var(--c-dark)", lineHeight: 1.05 }}>
         {clientConfig.hero.titleLines.map((line, i) => (
           <React.Fragment key={i}>
             {i > 0 && <br />}
@@ -273,8 +273,8 @@ function HeroBanner() {
 
 function SwirlDivider() {
   return (
-    <div style={{ height: 200, margin: "0 0 32px", position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 34, color: "#F6EEDF", textAlign: "center", lineHeight: 1.1 }}>
+    <div style={{ height: 200, margin: "0 0 32px", position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 34, color: "var(--c-cream)", textAlign: "center", lineHeight: 1.1 }}>
         {clientConfig.hero.swirlLines.map((line, i) => (
           <React.Fragment key={i}>
             {i > 0 && <br />}
@@ -289,13 +289,13 @@ function SwirlDivider() {
 function EarnRewardsCard({ onView }) {
   return (
     <div style={{ padding: "0 20px", marginBottom: 32 }}>
-      <div onClick={onView} style={{ background: "linear-gradient(160deg, #D8C3E8 0%, #C9A8DC 100%)", borderRadius: 20, padding: "32px 24px", textAlign: "center", position: "relative", overflow: "hidden", cursor: "pointer" }}>
+      <div onClick={onView} style={{ background: "linear-gradient(160deg, var(--c-lilac) 0%, var(--c-purple) 100%)", borderRadius: 20, padding: "32px 24px", textAlign: "center", position: "relative", overflow: "hidden", cursor: "pointer" }}>
         <div style={{ position: "absolute", top: -14, right: -14, opacity: 0.2 }}>
           <CowMark size={140} />
         </div>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 26, color: "#1A1420", marginBottom: 10, position: "relative" }}>Earn Rewards</div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#3D2B45", marginBottom: 22, position: "relative" }}>{clientConfig.loyalty.earnCardBody}</div>
-        <button style={{ background: "#1A1420", color: "#F6EEDF", border: "none", padding: "12px 28px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer", position: "relative" }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 26, color: "var(--c-dark)", marginBottom: 10, position: "relative" }}>Earn Rewards</div>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-darkAlt)", marginBottom: 22, position: "relative" }}>{clientConfig.loyalty.earnCardBody}</div>
+        <button style={{ background: "var(--c-dark)", color: "var(--c-cream)", border: "none", padding: "12px 28px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer", position: "relative" }}>
           View Rewards
         </button>
       </div>
@@ -307,15 +307,15 @@ function MenuStrip() {
   const items = clientConfig.menuStrip;
   return (
     <div style={{ padding: "0 20px", marginBottom: 32 }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "#1A1420", marginBottom: 14 }}>On the menu</div>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "var(--c-dark)", marginBottom: 14 }}>On the menu</div>
       <div style={{ display: "flex", gap: 12 }}>
         {items.map((item) => (
           <div key={item.name} style={{ flex: 1, textAlign: "center" }}>
-            <div style={{ background: item.bg, borderRadius: 16, border: "2px solid #1A1420", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+            <div style={{ background: item.bg, borderRadius: 16, border: "2px solid var(--c-dark)", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
               <CowMark size={44} />
             </div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: "#1A1420" }}>{item.name}</div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: "#6E5A73" }}>{item.tag}</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: "var(--c-dark)" }}>{item.name}</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: "var(--c-muted)" }}>{item.tag}</div>
           </div>
         ))}
       </div>
@@ -327,14 +327,14 @@ function ProgressSection({ customer }) {
   const pct = (customer.stamps / STAMPS_FOR_REWARD) * 100;
   return (
     <div style={{ padding: "0 20px", marginBottom: 32 }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "#1A1420", marginBottom: 16 }}>My Stamp Progress</div>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "var(--c-dark)", marginBottom: 16 }}>My Stamp Progress</div>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "#D9A441", fontWeight: 700, whiteSpace: "nowrap" }}>{customer.stamps}/{STAMPS_FOR_REWARD}</div>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "var(--c-gold)", fontWeight: 700, whiteSpace: "nowrap" }}>{customer.stamps}/{STAMPS_FOR_REWARD}</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", marginBottom: 8 }}>{clientConfig.loyalty.progressLabel(STAMPS_FOR_REWARD)}</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 8 }}>{clientConfig.loyalty.progressLabel(STAMPS_FOR_REWARD)}</div>
           <div style={{ position: "relative" }}>
-            <div style={{ height: 14, borderRadius: 999, background: "#ECE0F5", border: "2px solid #1A1420", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${pct}%`, background: "#D9A441", borderRadius: 999, transition: "width 0.3s ease" }} />
+            <div style={{ height: 14, borderRadius: 999, background: "var(--c-border)", border: "2px solid var(--c-dark)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${pct}%`, background: "var(--c-gold)", borderRadius: 999, transition: "width 0.3s ease" }} />
             </div>
             <div style={{ position: "absolute", right: -6, top: -14 }}>
               <CowMark size={30} />
@@ -349,11 +349,11 @@ function ProgressSection({ customer }) {
 function FollowUs() {
   return (
     <div style={{ textAlign: "center", paddingBottom: 100 }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "#1A1420", marginBottom: 18 }}>Follow us</div>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "var(--c-dark)", marginBottom: 18 }}>Follow us</div>
       <div style={{ display: "flex", justifyContent: "center", gap: 14 }}>
         {[Facebook, Music2, Instagram].map((Icon, i) => (
-          <div key={i} style={{ width: 48, height: 48, borderRadius: "50%", background: "#D9A441", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Icon color="#1A1420" size={22} />
+          <div key={i} style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--c-gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon color="var(--c-dark)" size={22} />
           </div>
         ))}
       </div>
@@ -377,8 +377,8 @@ function HomeScreen({ customer, goToRewards }) {
 
 function RewardsHero() {
   return (
-    <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 32, color: "#F6EEDF" }}>Your Rewards</div>
+    <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 32, color: "var(--c-cream)" }}>Your Rewards</div>
     </div>
   );
 }
@@ -400,11 +400,11 @@ function HowToEarn() {
   const steps = clientConfig.howToEarn;
   return (
     <div style={{ padding: "8px 20px 32px" }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "#1A1420", marginBottom: 18 }}>How to start earning</div>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "var(--c-dark)", marginBottom: 18 }}>How to start earning</div>
       {steps.map((s) => (
         <div key={s.n} style={{ marginBottom: 18 }}>
-          <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420", marginBottom: 4 }}>{s.n}) {s.title}</div>
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#6E5A73", lineHeight: 1.5 }}>{s.body}</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)", marginBottom: 4 }}>{s.n}) {s.title}</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-muted)", lineHeight: 1.5 }}>{s.body}</div>
         </div>
       ))}
     </div>
@@ -416,8 +416,8 @@ function RewardsHome({ goToCards, goToGifts }) {
     <div style={{ paddingBottom: 100 }}>
       <RewardsHero />
       <div style={{ height: 20 }} />
-      <PromoCard title="MY LOYALTY CARDS" body={`Get a stamp on your ${clientConfig.brandName} card for every coffee — buy 9, and the 10th's on the cow.`} cta="VIEW CARDS" bg="#1A1420" color="#F6EEDF" onClick={goToCards} />
-      <PromoCard title="MY GIFTS" body="Check what's waiting for you — like a free coffee on your birthday." cta="VIEW GIFT LIST" bg="#D9A441" color="#1A1420" onClick={goToGifts} />
+      <PromoCard title="MY LOYALTY CARDS" body={`Get a stamp on your ${clientConfig.brandName} card for every coffee — buy 9, and the 10th's on the cow.`} cta="VIEW CARDS" bg="var(--c-dark)" color="var(--c-cream)" onClick={goToCards} />
+      <PromoCard title="MY GIFTS" body="Check what's waiting for you — like a free coffee on your birthday." cta="VIEW GIFT LIST" bg="var(--c-gold)" color="var(--c-dark)" onClick={goToGifts} />
       <HowToEarn />
     </div>
   );
@@ -429,21 +429,21 @@ function LoyaltyCardDetail({ customer }) {
     <div style={{ paddingBottom: 60 }}>
       <div style={{ display: "flex", padding: "20px 20px 0" }}>
         {["active", "nonactive"].map((t) => (
-          <div key={t} onClick={() => setTab(t)} style={{ flex: 1, textAlign: "center", paddingBottom: 12, borderBottom: tab === t ? "2px solid #1A1420" : "2px solid transparent", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, color: tab === t ? "#1A1420" : "#B8ACC0", cursor: "pointer" }}>
+          <div key={t} onClick={() => setTab(t)} style={{ flex: 1, textAlign: "center", paddingBottom: 12, borderBottom: tab === t ? "2px solid var(--c-dark)" : "2px solid transparent", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, color: tab === t ? "var(--c-dark)" : "var(--c-inactive)", cursor: "pointer" }}>
             {t === "active" ? "Active (1)" : "Non-Active"}
           </div>
         ))}
       </div>
       {tab === "active" ? (
         <div style={{ padding: "24px 20px" }}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid #ECE0F5", boxShadow: "0 8px 24px rgba(26,20,32,0.08)" }}>
-            <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", marginBottom: 16 }}>{clientConfig.brandName} Loyalty Card</div>
+          <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid var(--c-border)", boxShadow: "0 8px 24px rgba(26,20,32,0.08)" }}>
+            <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", marginBottom: 16 }}>{clientConfig.brandName} Loyalty Card</div>
             <CowStampCard stamps={customer.stamps} />
-            <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93", marginTop: 12 }}>Code: {customer.code}</div>
+            <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)", marginTop: 12 }}>Code: {customer.code}</div>
           </div>
         </div>
       ) : (
-        <div style={{ padding: "40px 20px", textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "#8B7A93" }}>
+        <div style={{ padding: "40px 20px", textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-faint)" }}>
           No past cards yet — your redeemed and expired cards will show up here.
         </div>
       )}
@@ -455,17 +455,17 @@ function GiftsView() {
   return (
     <div style={{ paddingBottom: 60 }}>
       <div style={{ padding: "24px 20px" }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "#1A1420", marginBottom: 18 }}>My Gifts</div>
-        <div style={{ background: "#D8C3E8", borderRadius: 18, padding: "20px", display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "var(--c-dark)", marginBottom: 18 }}>My Gifts</div>
+        <div style={{ background: "var(--c-lilac)", borderRadius: 18, padding: "20px", display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ background: "#fff", borderRadius: "50%", width: 52, height: 52, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Gift color="#1A1420" size={24} />
+            <Gift color="var(--c-dark)" size={24} />
           </div>
           <div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>{clientConfig.gift.title}</div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#3D2B45", marginTop: 2 }}>{clientConfig.gift.body}</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)" }}>{clientConfig.gift.title}</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-darkAlt)", marginTop: 2 }}>{clientConfig.gift.body}</div>
           </div>
         </div>
-        <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "#8B7A93", marginTop: 24 }}>
+        <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-faint)", marginTop: 24 }}>
           Nothing else waiting right now — check back after your next few visits.
         </div>
       </div>
@@ -476,21 +476,21 @@ function GiftsView() {
 function ScanCodeScreen({ customer }) {
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ height: 130, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 28, color: "#F6EEDF" }}>Scan Code</div>
+      <div style={{ height: 130, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 28, color: "var(--c-cream)" }}>Scan Code</div>
       </div>
       <div style={{ padding: "28px 20px" }}>
-        <div style={{ background: "#fff", borderRadius: 24, padding: "28px 24px", textAlign: "center", border: "1px solid #ECE0F5", boxShadow: "0 8px 24px rgba(26,20,32,0.08)" }}>
-          <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", marginBottom: 4 }}>Show this to staff</div>
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginBottom: 24 }}>Scanned at checkout to add a stamp or redeem a reward</div>
-          <div style={{ display: "inline-block", padding: 16, background: "#F6EEDF", borderRadius: 16, border: "2px solid #1A1420" }}>
+        <div style={{ background: "#fff", borderRadius: 24, padding: "28px 24px", textAlign: "center", border: "1px solid var(--c-border)", boxShadow: "0 8px 24px rgba(26,20,32,0.08)" }}>
+          <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", marginBottom: 4 }}>Show this to staff</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 24 }}>Scanned at checkout to add a stamp or redeem a reward</div>
+          <div style={{ display: "inline-block", padding: 16, background: "var(--c-cream)", borderRadius: 16, border: "2px solid var(--c-dark)" }}>
             <QrCanvas value={customer.code} size={190} />
           </div>
-          <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 1, color: "#D9A441", marginTop: 16 }}>{customer.code}</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 1, color: "var(--c-gold)", marginTop: 16 }}>{customer.code}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 24, padding: "0 4px" }}>
           <CowMark size={32} />
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6E5A73", lineHeight: 1.5 }}>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-muted)", lineHeight: 1.5 }}>
             Your code stays the same — no need to screenshot it, just open this screen at the counter.
           </div>
         </div>
@@ -503,22 +503,22 @@ function MenuScreen() {
   const categories = clientConfig.menu.categories;
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 32, color: "#F6EEDF" }}>Our Menu</div>
+      <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 32, color: "var(--c-cream)" }}>Our Menu</div>
       </div>
       <div style={{ padding: "28px 20px" }}>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 15, color: "#1A1420", lineHeight: 1.6, marginBottom: 32 }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 15, color: "var(--c-dark)", lineHeight: 1.6, marginBottom: 32 }}>
           {clientConfig.menu.intro}
         </div>
         {categories.map((c) => (
           <div key={c.title} style={{ marginBottom: 26 }}>
-            <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "#1A1420", marginBottom: 6 }}>{c.title}</div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#6E5A73", lineHeight: 1.6 }}>{c.body}</div>
+            <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "var(--c-dark)", marginBottom: 6 }}>{c.title}</div>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-muted)", lineHeight: 1.6 }}>{c.body}</div>
           </div>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, padding: "16px 4px 0", borderTop: "1px solid #ECE0F5" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, padding: "16px 4px 0", borderTop: "1px solid var(--c-border)" }}>
           <CowMark size={30} />
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93", lineHeight: 1.5 }}>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)", lineHeight: 1.5 }}>
             {clientConfig.menu.footerNote}
           </div>
         </div>
@@ -530,48 +530,48 @@ function MenuScreen() {
 function VisitScreen() {
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 32, color: "#F6EEDF" }}>Find Us</div>
+      <div style={{ height: 150, position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 32, color: "var(--c-cream)" }}>Find Us</div>
       </div>
       <div style={{ padding: "28px 20px" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
           <CowMark size={70} />
         </div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#1A1420", textAlign: "center", lineHeight: 1.6, marginBottom: 28 }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-dark)", textAlign: "center", lineHeight: 1.6, marginBottom: 28 }}>
           {clientConfig.location.intro}
         </div>
-        <div style={{ background: "#fff", borderRadius: 20, border: "1px solid #ECE0F5", padding: "22px 20px", marginBottom: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 20, border: "1px solid var(--c-border)", padding: "22px 20px", marginBottom: 20 }}>
           <div style={{ display: "flex", gap: 14, marginBottom: 20 }}>
-            <MapPin color="#D9A441" size={22} style={{ flexShrink: 0, marginTop: 2 }} />
+            <MapPin color="var(--c-gold)" size={22} style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Address</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>{clientConfig.location.address}</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)" }}>Address</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginTop: 2 }}>{clientConfig.location.address}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 14, marginBottom: 20 }}>
             <div style={{ width: 22, textAlign: "center", flexShrink: 0, fontSize: 16 }}>🕐</div>
             <div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Hours</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>{clientConfig.location.hours}</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)" }}>Hours</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginTop: 2 }}>{clientConfig.location.hours}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 14 }}>
             <div style={{ width: 22, textAlign: "center", flexShrink: 0, fontSize: 16 }}>📞</div>
             <div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "#1A1420" }}>Contact</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginTop: 2 }}>{clientConfig.location.phone}</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)" }}>Contact</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginTop: 2 }}>{clientConfig.location.phone}</div>
             </div>
           </div>
         </div>
-        <button style={{ width: "100%", background: "#1A1420", color: "#F6EEDF", border: "none", padding: "14px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 32 }}>
+        <button style={{ width: "100%", background: "var(--c-dark)", color: "var(--c-cream)", border: "none", padding: "14px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 32 }}>
           Get Directions
         </button>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", marginBottom: 14 }}>Follow us</div>
+          <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", marginBottom: 14 }}>Follow us</div>
           <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
             {[Facebook, Music2, Instagram].map((Icon, i) => (
-              <div key={i} style={{ width: 42, height: 42, borderRadius: "50%", background: "#D9A441", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon color="#1A1420" size={18} />
+              <div key={i} style={{ width: 42, height: 42, borderRadius: "50%", background: "var(--c-gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon color="var(--c-dark)" size={18} />
               </div>
             ))}
           </div>
@@ -591,7 +591,7 @@ function AccountScreen({ customer, onSave, onLogout, onDelete }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 15, marginBottom: 14, boxSizing: "border-box" };
+  const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 15, marginBottom: 14, boxSizing: "border-box" };
 
   const save = async () => {
     setBusy(true);
@@ -622,26 +622,26 @@ function AccountScreen({ customer, onSave, onLogout, onDelete }) {
       <div
         style={{
           height: 130, position: "relative", overflow: "hidden",
-          background: "radial-gradient(circle at 20% 30%, #D9A441 0%, transparent 45%), radial-gradient(circle at 80% 70%, #C9A8DC 0%, transparent 50%), linear-gradient(160deg, #1A1420 0%, #3D2B45 100%)",
+          background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}
       >
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 28, color: "#F6EEDF" }}>My Account</div>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 28, color: "var(--c-cream)" }}>My Account</div>
       </div>
 
       <div style={{ padding: "28px 20px" }}>
-        <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid #ECE0F5", marginBottom: 20 }}>
-          <label style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: "#8B7A93", display: "block", marginBottom: 6 }}>Name</label>
+        <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid var(--c-border)", marginBottom: 20 }}>
+          <label style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--c-faint)", display: "block", marginBottom: 6 }}>Name</label>
           <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} />
-          <label style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: "#8B7A93", display: "block", marginBottom: 6 }}>Phone or email</label>
+          <label style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--c-faint)", display: "block", marginBottom: 6 }}>Phone or email</label>
           <input style={{ ...inputStyle, marginBottom: 4 }} value={contact} onChange={(e) => setContact(e.target.value)} />
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginBottom: 18 }}>Your loyalty code: {customer.code}</div>
-          {error && <p style={{ fontFamily: "Inter, sans-serif", color: "#8A2E2E", fontSize: 13, marginBottom: 12 }}>{error}</p>}
-          {saved && <p style={{ fontFamily: "Inter, sans-serif", color: "#1A1420", fontSize: 13, marginBottom: 12, fontWeight: 600 }}>✓ Saved</p>}
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "var(--c-faint)", marginBottom: 18 }}>Your loyalty code: {customer.code}</div>
+          {error && <p style={{ fontFamily: "Inter, sans-serif", color: "var(--c-error)", fontSize: 13, marginBottom: 12 }}>{error}</p>}
+          {saved && <p style={{ fontFamily: "Inter, sans-serif", color: "var(--c-dark)", fontSize: 13, marginBottom: 12, fontWeight: 600 }}>✓ Saved</p>}
           <button
             disabled={!name || busy}
             onClick={save}
-            style={{ width: "100%", background: name && !busy ? "#1A1420" : "#D8C3E8", color: "#F6EEDF", border: "none", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: name && !busy ? "pointer" : "not-allowed" }}
+            style={{ width: "100%", background: name && !busy ? "var(--c-dark)" : "var(--c-lilac)", color: "var(--c-cream)", border: "none", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: name && !busy ? "pointer" : "not-allowed" }}
           >
             {busy ? "Saving…" : "Save changes"}
           </button>
@@ -650,18 +650,18 @@ function AccountScreen({ customer, onSave, onLogout, onDelete }) {
         {!confirmingLogout ? (
           <button
             onClick={() => setConfirmingLogout(true)}
-            style={{ width: "100%", background: "transparent", color: "#8A2E2E", border: "1px solid #E3B8B8", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer", marginBottom: 14 }}
+            style={{ width: "100%", background: "transparent", color: "var(--c-error)", border: "1px solid var(--c-errorBorder)", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer", marginBottom: 14 }}
           >
             Log out
           </button>
         ) : (
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E3B8B8", padding: 16, textAlign: "center", marginBottom: 14 }}>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", marginBottom: 12 }}>
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid var(--c-errorBorder)", padding: 16, textAlign: "center", marginBottom: 14 }}>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 12 }}>
               Log out of this card? You'll need to join again to get a new one on this device.
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setConfirmingLogout(false)} style={{ flex: 1, background: "#ECE0F5", color: "#1A1420", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
-              <button onClick={onLogout} style={{ flex: 1, background: "#8A2E2E", color: "#fff", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Log out</button>
+              <button onClick={() => setConfirmingLogout(false)} style={{ flex: 1, background: "var(--c-border)", color: "var(--c-dark)", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+              <button onClick={onLogout} style={{ flex: 1, background: "var(--c-error)", color: "#fff", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Log out</button>
             </div>
           </div>
         )}
@@ -669,26 +669,26 @@ function AccountScreen({ customer, onSave, onLogout, onDelete }) {
         {!confirmingDelete ? (
           <button
             onClick={() => setConfirmingDelete(true)}
-            style={{ width: "100%", background: "transparent", color: "#8A2E2E", border: "none", padding: "10px", fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}
+            style={{ width: "100%", background: "transparent", color: "var(--c-error)", border: "none", padding: "10px", fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}
           >
             Delete my account and data
           </button>
         ) : (
-          <div style={{ background: "#FBEAEA", borderRadius: 16, border: "1px solid #E3B8B8", padding: 16, textAlign: "center" }}>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", marginBottom: 4, fontWeight: 700 }}>
+          <div style={{ background: "var(--c-errorBg)", borderRadius: 16, border: "1px solid var(--c-errorBorder)", padding: 16, textAlign: "center" }}>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 4, fontWeight: 700 }}>
               This can't be undone
             </div>
-            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", marginBottom: 12 }}>
+            <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 12 }}>
               Your name, contact info, and stamp history will be permanently deleted.
             </div>
             {deleteError && (
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#8A2E2E", fontWeight: 600, marginBottom: 12 }}>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-error)", fontWeight: 600, marginBottom: 12 }}>
                 {deleteError}
               </div>
             )}
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setConfirmingDelete(false)} disabled={deleting} style={{ flex: 1, background: "#ECE0F5", color: "#1A1420", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
-              <button onClick={confirmDelete} disabled={deleting} style={{ flex: 1, background: "#8A2E2E", color: "#fff", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+              <button onClick={() => setConfirmingDelete(false)} disabled={deleting} style={{ flex: 1, background: "var(--c-border)", color: "var(--c-dark)", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+              <button onClick={confirmDelete} disabled={deleting} style={{ flex: 1, background: "var(--c-error)", color: "#fff", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                 {deleting ? "Deleting…" : "Delete permanently"}
               </button>
             </div>
@@ -838,12 +838,12 @@ function ScanPanel({ customers, onFoundCode }) {
 
   if (isNative) {
     return (
-      <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid #ECE0F5", borderRadius: 18, padding: 20 }}>
+      <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid var(--c-border)", borderRadius: 18, padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", margin: 0 }}>Scan to add a stamp</h3>
-          <button onClick={startNativeScan} style={{ background: "#1A1420", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Start scan</button>
+          <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", margin: 0 }}>Scan to add a stamp</h3>
+          <button onClick={startNativeScan} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Start scan</button>
         </div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginBottom: 12 }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 12 }}>
           Opens your phone's camera to scan a customer's QR code directly.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
@@ -853,26 +853,26 @@ function ScanPanel({ customers, onFoundCode }) {
             onChange={(e) => setManualCode(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submitManualCode(); }}
             placeholder="Type a code, or scan with a wired/wireless scanner"
-            style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 13 }}
+            style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 13 }}
           />
-          <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
+          <button onClick={submitManualCode} style={{ background: "var(--c-gold)", color: "var(--c-dark)", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
         </div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "var(--c-faint)", marginTop: 8 }}>
           A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only {clientConfig.brandName} codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
         </p>
-        {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
+        {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", fontWeight: 600 }}>{message}</div>}
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid #ECE0F5", borderRadius: 18, padding: 20 }}>
+    <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid var(--c-border)", borderRadius: 18, padding: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", margin: 0 }}>Scan to add a stamp</h3>
+        <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", margin: 0 }}>Scan to add a stamp</h3>
         {!scanning ? (
-          <button onClick={startBrowserScan} style={{ background: "#1A1420", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Start scan</button>
+          <button onClick={startBrowserScan} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Start scan</button>
         ) : (
-          <button onClick={stopBrowserScan} style={{ background: "#ECE0F5", color: "#1A1420", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Stop</button>
+          <button onClick={stopBrowserScan} style={{ background: "var(--c-border)", color: "var(--c-dark)", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Stop</button>
         )}
       </div>
       {scanning && (
@@ -892,7 +892,7 @@ function ScanPanel({ customers, onFoundCode }) {
           )}
         </div>
       )}
-      {!supported && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#8A2E2E", marginBottom: 12 }}>Camera QR scanning needs Chrome or Edge. Enter the customer's code below as a fallback.</p>}
+      {!supported && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-error)", marginBottom: 12 }}>Camera QR scanning needs Chrome or Edge. Enter the customer's code below as a fallback.</p>}
       <div style={{ display: "flex", gap: 8 }}>
         <input
           ref={hardwareInputRef}
@@ -900,14 +900,14 @@ function ScanPanel({ customers, onFoundCode }) {
           onChange={(e) => setManualCode(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submitManualCode(); }}
           placeholder="Type a code, or scan with a wired/wireless scanner"
-          style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 13 }}
+          style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 13 }}
         />
-        <button onClick={submitManualCode} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
+        <button onClick={submitManualCode} style={{ background: "var(--c-gold)", color: "var(--c-dark)", border: "none", borderRadius: 10, padding: "10px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Add</button>
       </div>
-      <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#8B7A93", marginTop: 8 }}>
+      <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "var(--c-faint)", marginTop: 8 }}>
         A USB or Bluetooth barcode scanner also works here, hands-free — keep this field focused and scan. Only {clientConfig.brandName} codes are accepted, and re-scanning the same code within a few seconds is ignored so a lingering trigger doesn't double-stamp.
       </p>
-      {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "#1A1420", fontWeight: 600 }}>{message}</div>}
+      {message && <div style={{ marginTop: 10, fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", fontWeight: 600 }}>{message}</div>}
     </div>
   );
 }
@@ -917,7 +917,7 @@ function StaffLogin({ onLoggedIn }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", fontSize: 15, marginBottom: 14, boxSizing: "border-box" };
+  const inputStyle = { width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 15, marginBottom: 14, boxSizing: "border-box" };
 
   const submit = async () => {
     setBusy(true);
@@ -932,18 +932,18 @@ function StaffLogin({ onLoggedIn }) {
   };
 
   return (
-    <div style={{ background: "#F6EEDF", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ background: "var(--c-cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 340, width: "100%", textAlign: "center" }}>
         <CowMark size={64} style={{ margin: "0 auto 14px" }} />
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 24, color: "#1A1420", marginBottom: 4 }}>Staff sign in</div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginBottom: 22 }}>Sign in with your staff account to add stamps.</div>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 24, color: "var(--c-dark)", marginBottom: 4 }}>Staff sign in</div>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 22 }}>Sign in with your staff account to add stamps.</div>
         <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
-        {error && <p style={{ fontFamily: "Inter, sans-serif", color: "#8A2E2E", fontSize: 13, marginTop: -6, marginBottom: 12 }}>{error}</p>}
+        {error && <p style={{ fontFamily: "Inter, sans-serif", color: "var(--c-error)", fontSize: 13, marginTop: -6, marginBottom: 12 }}>{error}</p>}
         <button
           disabled={!email || !password || busy}
           onClick={submit}
-          style={{ width: "100%", background: email && password && !busy ? "#1A1420" : "#D8C3E8", color: "#F6EEDF", border: "none", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, cursor: email && password && !busy ? "pointer" : "not-allowed" }}
+          style={{ width: "100%", background: email && password && !busy ? "var(--c-dark)" : "var(--c-lilac)", color: "var(--c-cream)", border: "none", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, cursor: email && password && !busy ? "pointer" : "not-allowed" }}
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
@@ -1001,15 +1001,15 @@ function OwnerApp({ onExit }) {
   }
 
   return (
-    <div style={{ background: "#F6EEDF", minHeight: "100vh", padding: "0 0 40px", fontFamily: "Inter, sans-serif" }}>
-      <div style={{ background: "#1A1420", padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 22, color: "#F6EEDF" }}>{clientConfig.brandName} — Staff</div>
+    <div style={{ background: "var(--c-cream)", minHeight: "100vh", padding: "0 0 40px", fontFamily: "Inter, sans-serif" }}>
+      <div style={{ background: "var(--c-dark)", padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 22, color: "var(--c-cream)" }}>{clientConfig.brandName} — Staff</div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={signOut} style={{ background: "transparent", color: "#D8C3E8", border: "1px solid #D8C3E8", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+          <button onClick={signOut} style={{ background: "transparent", color: "var(--c-lilac)", border: "1px solid var(--c-lilac)", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
             Sign out
           </button>
           {onExit && (
-            <button onClick={onExit} style={{ background: "#ECE0F5", color: "#1A1420", border: "none", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+            <button onClick={onExit} style={{ background: "var(--c-border)", color: "var(--c-dark)", border: "none", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
               Exit staff mode
             </button>
           )}
@@ -1017,20 +1017,20 @@ function OwnerApp({ onExit }) {
       </div>
       <div style={{ padding: "24px 20px" }}>
         {loading ? (
-          <div style={{ textAlign: "center", color: "#6E5A73" }}>Loading…</div>
+          <div style={{ textAlign: "center", color: "var(--c-muted)" }}>Loading…</div>
         ) : (
           <>
             <ScanPanel customers={customers} onFoundCode={addStampByCode} />
             {customers.map((c) => (
-              <div key={c.code} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid #ECE0F5", borderRadius: 14, padding: "12px 16px", marginBottom: 10, maxWidth: 480, margin: "0 auto 10px" }}>
+              <div key={c.code} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid var(--c-border)", borderRadius: 14, padding: "12px 16px", marginBottom: 10, maxWidth: 480, margin: "0 auto 10px" }}>
                 <div>
-                  <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 15, color: "#1A1420" }}>{c.name}</div>
-                  <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8B7A93" }}>{c.stamps} / {STAMPS_FOR_REWARD} stamps · {c.code}</div>
+                  <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 15, color: "var(--c-dark)" }}>{c.name}</div>
+                  <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)" }}>{c.stamps} / {STAMPS_FOR_REWARD} stamps · {c.code}</div>
                 </div>
                 {c.stamps >= STAMPS_FOR_REWARD ? (
-                  <button onClick={() => resetStamps(c.code)} style={{ background: "#D9A441", color: "#1A1420", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Redeem</button>
+                  <button onClick={() => resetStamps(c.code)} style={{ background: "var(--c-gold)", color: "var(--c-dark)", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Redeem</button>
                 ) : (
-                  <button onClick={() => addStampByCode(c.code)} style={{ background: "#1A1420", color: "#fff", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Add stamp</button>
+                  <button onClick={() => addStampByCode(c.code)} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Add stamp</button>
                 )}
               </div>
             ))}
@@ -1045,7 +1045,7 @@ function LoadingScreen() {
   return (
     <div
       style={{
-        background: "radial-gradient(circle at 30% 35%, #3D2B45 0%, #1A1420 70%)",
+        background: "radial-gradient(circle at 30% 35%, var(--c-darkAlt) 0%, var(--c-dark) 70%)",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
@@ -1076,7 +1076,7 @@ function LoadingScreen() {
           fontFamily: "Baloo 2, sans-serif",
           fontWeight: 800,
           fontSize: 26,
-          color: "#F6EEDF",
+          color: "var(--c-cream)",
           marginTop: 20,
           animation: "moo-fade 0.6s ease-out 0.15s both",
         }}
@@ -1087,7 +1087,7 @@ function LoadingScreen() {
         style={{
           fontFamily: "Inter, sans-serif",
           fontSize: 14,
-          color: "#D8C3E8",
+          color: "var(--c-lilac)",
           marginTop: 10,
           maxWidth: 260,
           lineHeight: 1.5,
@@ -1123,10 +1123,10 @@ function PinPrompt({ onSubmit, onCancel }) {
           75% { transform: translateX(8px); }
         }
       `}</style>
-      <div style={{ background: "#F6EEDF", borderRadius: 20, padding: "28px 24px", maxWidth: 320, width: "100%", textAlign: "center", animation: error ? "pin-shake 0.3s ease" : "none" }}>
+      <div style={{ background: "var(--c-cream)", borderRadius: 20, padding: "28px 24px", maxWidth: 320, width: "100%", textAlign: "center", animation: error ? "pin-shake 0.3s ease" : "none" }}>
         <CowMark size={56} style={{ margin: "0 auto 14px" }} />
-        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "#1A1420", marginBottom: 6 }}>Staff access</div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#6E5A73", marginBottom: 18 }}>Enter the staff PIN to continue</div>
+        <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", marginBottom: 6 }}>Staff access</div>
+        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 18 }}>Enter the staff PIN to continue</div>
         <input
           type="password"
           inputMode="numeric"
@@ -1134,12 +1134,12 @@ function PinPrompt({ onSubmit, onCancel }) {
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
           onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-          style={{ width: "100%", textAlign: "center", letterSpacing: 6, fontSize: 22, padding: "12px", borderRadius: 12, border: error ? "1px solid #8A2E2E" : "1px solid #D8C3E8", fontFamily: "Inter, sans-serif", marginBottom: error ? 8 : 18, boxSizing: "border-box" }}
+          style={{ width: "100%", textAlign: "center", letterSpacing: 6, fontSize: 22, padding: "12px", borderRadius: 12, border: error ? "1px solid var(--c-error)" : "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", marginBottom: error ? 8 : 18, boxSizing: "border-box" }}
         />
-        {error && <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8A2E2E", marginBottom: 10 }}>Wrong PIN — try again</div>}
+        {error && <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-error)", marginBottom: 10 }}>Wrong PIN — try again</div>}
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onCancel} style={{ flex: 1, background: "#ECE0F5", color: "#1A1420", border: "none", padding: "12px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancel</button>
-          <button onClick={submit} style={{ flex: 1, background: "#1A1420", color: "#F6EEDF", border: "none", padding: "12px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Enter</button>
+          <button onClick={onCancel} style={{ flex: 1, background: "var(--c-border)", color: "var(--c-dark)", border: "none", padding: "12px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancel</button>
+          <button onClick={submit} style={{ flex: 1, background: "var(--c-dark)", color: "var(--c-cream)", border: "none", padding: "12px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Enter</button>
         </div>
       </div>
     </div>
@@ -1254,7 +1254,7 @@ function CustomerApp({ onStaffAccess }) {
   };
 
   return (
-    <div style={{ background: "#F6EEDF", minHeight: "100vh", maxWidth: 420, margin: "0 auto", fontFamily: "Inter, sans-serif", position: "relative" }}>
+    <div style={{ background: "var(--c-cream)", minHeight: "100vh", maxWidth: 420, margin: "0 auto", fontFamily: "Inter, sans-serif", position: "relative" }}>
       <TopBar onBack={subScreen ? handleBack : null} onMenu={() => setDrawerOpen(true)} onSecretTap={handleSecretTap} onAccount={() => setScreen("account")} />
       {screen === "home" && <HomeScreen customer={customer} goToRewards={() => setScreen("rewards")} />}
       {screen === "rewards" && <RewardsHome goToCards={() => setScreen("cards")} goToGifts={() => setScreen("gifts")} />}
@@ -1276,11 +1276,18 @@ function CustomerApp({ onStaffAccess }) {
   );
 }
 
+function ThemeVars() {
+  const c = clientConfig.colors;
+  const vars = Object.entries(c).map(([key, value]) => `--c-${key}: ${value};`).join(" ");
+  return <style>{`:root { ${vars} }`}</style>;
+}
+
 export default function App() {
   const queryOwner = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("owner");
   const [ownerMode, setOwnerMode] = useState(queryOwner);
   return (
     <>
+      <ThemeVars />
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');`}</style>
       {ownerMode ? (
         <OwnerApp onExit={() => setOwnerMode(false)} />
