@@ -46,10 +46,12 @@ home-screen icon/name.
 
 | Feature | Status | PR |
 |---|---|---|
-| Icon/splash generation tooling (`@capacitor/assets`) | ⏳ Not started | — |
-| Android `appId`/`appName` substitution script | ⏳ Not started | — |
+| `clients/<slug>/` manifest convention (appId, appName, tenantSlug, icon/splash colors) | ✅ Done | — |
+| "New client" scaffold script (`npm run new-client`) | ✅ Done | — |
+| Android `appId`/`appName`/Java-package substitution script (`scripts/apply-client-identity.mjs`) | ✅ Done — verified against a scratch worktree clone (rename + revert both clean) | — |
+| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | 🚧 Wired up, but **untested end-to-end on this dev machine** — `@capacitor/assets`' pinned `sharp@0.32.6` has no prebuilt binary for Node 24 on Windows x64 in this environment. Should work as-is on Mac/Linux or with an older Node; needs verifying there | — |
+| `npm run build-client` orchestrator (identity + assets + web build + `cap sync`) | ✅ Done, same sharp caveat as above for the asset-generation step | — |
 | iOS bundle-id + signing/provisioning setup (`@capacitor/ios` not yet installed) | ⏳ Not started | — |
-| "New client" checklist/scaffold script | ⏳ Not started | — |
 | iOS CI (GitHub Actions/Codemagic) | ⏸️ Deferred until 2nd client confirms it's worth automating | — |
 
 ---
@@ -75,6 +77,8 @@ section it updates or overrides.
 | 2026-09-23 | Falls back silently to the bundled Hugo `client.config.js` if the `tenants` table doesn't exist yet, the slug isn't found, or the fetch fails/errors | Kept as a safety net for future per-client builds / local dev without Supabase, even though the live Hugo project now has the migration applied | §3 Option B |
 | 2026-09-23 | Applied `supabase-schema-tenants.sql` to the live Hugo Supabase project (ref `ubniiattgwoouziejubu`) | Epic 2 groundwork (schema + RLS) was already verified against the scratch project; frontend tenant-resolution (PR #6) landed first so the app has something to use the new schema for | §3 Option B |
 | 2026-09-23 | Mapped `staff@hugocoffee.com` to the `hugo` tenant in `staff_tenant` immediately after applying the migration | The new tenant-scoped RLS policies ("Staff read/update own tenant") match on `staff_tenant.tenant_id`; with 0 rows in that table right after migration, the existing staff login would have lost visibility into all customers in the owner dashboard until mapped | §3 Option B |
+| 2026-09-23 | Per-client packaging builds one client at a time against the single shared `android/` project (`clients/<slug>/client.json` + `scripts/apply-client-identity.mjs` rewrite its appId/appName/Java package in place), rather than keeping N separate checked-in Android platform folders | Matches the existing low-volume, one-release-at-a-time manual workflow (same spirit as the iOS CI deferral) instead of adding the ongoing overhead of N parallel native projects for ~10 prospective clients | §6, Epic 3 |
+| 2026-09-23 | Client logo intake uses `@capacitor/assets` "Easy Mode" (single `logo.png` + a background color) instead of Custom Mode (5 separately-sized layer images) | Clients are non-technical business owners — asking for one square logo file is realistic, asking for pre-cut icon-foreground/background/splash layers is not | §2 Brand identity, Epic 3 |
 
 ## Deviations from the original strategy doc
 
