@@ -1,9 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
+import { applyTenantConfig } from "./tenantConfig";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Resolve the tenant's config from Supabase before App.jsx (and its
+// client.config.js-derived module constants) ever evaluates.
+applyTenantConfig().finally(() => {
+  import("./App.jsx").then(({ default: App }) => {
+    ReactDOM.createRoot(document.getElementById("root")).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  });
+});

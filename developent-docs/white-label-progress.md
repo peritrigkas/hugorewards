@@ -32,11 +32,11 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 
 | Feature | Status | PR |
 |---|---|---|
-| `tenants` table schema design | ✅ Verified against scratch Supabase project ("Hugo White-Label Scratch"), not yet applied to the live project | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
-| `tenant_id` added to `customers` + backfill Hugo's row | ✅ Verified, same migration | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
-| RLS policies scoped by `tenant_id` | ✅ Verified — confirmed each policy applies to exactly one of anon/authenticated, security advisories clean | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
-| Staff auth → tenant mapping (`staff_tenant` table) | ✅ Verified, same migration | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
-| Tenant resolution in frontend (fetch config from DB row instead of static file) | ⏳ Not started | — |
+| `tenants` table schema design | ✅ Applied to the live Hugo project (2026-09-23) | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
+| `tenant_id` added to `customers` + backfill Hugo's row | ✅ Applied live — all 32 existing customer rows backfilled to the `hugo` tenant | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| RLS policies scoped by `tenant_id` | ✅ Applied live — security advisor clean (no new findings) | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
+| Staff auth → tenant mapping (`staff_tenant` table) | ✅ Applied live — `staff@hugocoffee.com` mapped to the `hugo` tenant | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
+| Tenant resolution in frontend (fetch config from DB row instead of static file) | ✅ Done | [#6](https://github.com/peritrigkas/hugorewards/pull/6) |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
@@ -71,6 +71,10 @@ section it updates or overrides.
 | 2026-09-17 | `supabase-schema-tenants.sql` migration written but deliberately NOT applied to the live Hugo project yet | No point running it before `App.jsx` has tenant-resolution logic to use it; drafted first for review since this is the highest-risk piece of the whole plan | §3 Option B |
 | 2026-09-17 | Created a new scratch Supabase project ("Hugo White-Label Scratch", same `Hugo` org) and applied the tenants migration there for real testing | Needed a real database to verify RLS behavior against, without any risk to Hugo's live pilot data | §3 Option B |
 | 2026-09-17 | Moved the `current_staff_tenant_id` helper into a `private` (non-API-exposed) schema, pinned its `search_path`, and restricted `EXECUTE` to `authenticated` only | Supabase's security advisor flagged the function as callable directly via `/rest/v1/rpc/` by anon and authenticated clients, and with a mutable search_path — both are real hardening issues for a `SECURITY DEFINER` function, even though this particular function only ever returns the caller's own tenant mapping | §3 Option B |
+| 2026-09-23 | Frontend tenant resolution fetches the `tenants` row and mutates the shared `clientConfig` object in place (via `src/tenantConfig.js`), rather than threading config through React context/props | `App.jsx`'s many module-level consts (`STAMPS_FOR_REWARD`, `CUSTOMER_CODE_RE`, `STORAGE_KEY`, `STAFF_PIN`) are derived from `clientConfig` at import time; `main.jsx` now awaits `applyTenantConfig()` and only then dynamically imports `App.jsx`, so those consts compute from the resolved tenant. Avoids a large refactor of App.jsx while still landing before the `tenants` migration is applied live | §3 Option B |
+| 2026-09-23 | Falls back silently to the bundled Hugo `client.config.js` if the `tenants` table doesn't exist yet, the slug isn't found, or the fetch fails/errors | Kept as a safety net for future per-client builds / local dev without Supabase, even though the live Hugo project now has the migration applied | §3 Option B |
+| 2026-09-23 | Applied `supabase-schema-tenants.sql` to the live Hugo Supabase project (ref `ubniiattgwoouziejubu`) | Epic 2 groundwork (schema + RLS) was already verified against the scratch project; frontend tenant-resolution (PR #6) landed first so the app has something to use the new schema for | §3 Option B |
+| 2026-09-23 | Mapped `staff@hugocoffee.com` to the `hugo` tenant in `staff_tenant` immediately after applying the migration | The new tenant-scoped RLS policies ("Staff read/update own tenant") match on `staff_tenant.tenant_id`; with 0 rows in that table right after migration, the existing staff login would have lost visibility into all customers in the owner dashboard until mapped | §3 Option B |
 
 ## Deviations from the original strategy doc
 
