@@ -76,7 +76,7 @@ export function AccountScreen({ customer, onSave, onLogout, onDelete }) {
         ) : (
           <div style={{ background: "#fff", borderRadius: 16, border: "1px solid var(--c-errorBorder)", padding: 16, textAlign: "center", marginBottom: 14 }}>
             <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 12 }}>
-              Log out of this card? You'll need to join again to get a new one on this device.
+              Log out on this phone? Your card and stamps stay saved here — tap “Log back in” to open them again.
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setConfirmingLogout(false)} style={{ flex: 1, background: "var(--c-border)", color: "var(--c-dark)", border: "none", padding: "11px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>

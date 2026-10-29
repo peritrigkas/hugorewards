@@ -2,7 +2,7 @@ import { useState } from "react";
 import { signInStaff } from "../lib/staffAuth";
 import { BrandMark } from "../components/BrandMark";
 
-export function StaffLogin({ onLoggedIn }) {
+export function StaffLogin({ onLoggedIn, customerOnDevice }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -27,6 +27,11 @@ export function StaffLogin({ onLoggedIn }) {
         <BrandMark size={64} style={{ margin: "0 auto 14px" }} />
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 24, color: "var(--c-dark)", marginBottom: 4 }}>Staff sign in</div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 22 }}>Sign in with your staff account to add stamps.</div>
+        {customerOnDevice && (
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-error)", background: "var(--c-errorBg)", borderRadius: 12, padding: "10px 12px", marginTop: -8, marginBottom: 18 }}>
+            This device has a customer card. Signing in as staff logs that card out of this device — staff can move it back with “Move card”.
+          </div>
+        )}
         <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
         {error && <p style={{ fontFamily: "Inter, sans-serif", color: "var(--c-error)", fontSize: 13, marginTop: -6, marginBottom: 12 }}>{error}</p>}

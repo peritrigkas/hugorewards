@@ -5,8 +5,16 @@ import { admin, must } from "../support/scratch.js";
 // cleanup also removes leftovers from failed runs.
 export const CONTACT_PATTERN = "smoke-%@test.local";
 
-export async function cleanup() {
+// Removes smoke customers, plus the anonymous accounts browsers created since
+// `since` (an ISO timestamp). Run the smoke and DB suites one after the other,
+// not at the same time, so this never deletes the DB tests' accounts mid-run.
+export async function cleanup(since) {
   must(await admin.from("customers").delete().like("contact", CONTACT_PATTERN));
+  if (!since) return;
+  const { users } = must(await admin.auth.admin.listUsers({ perPage: 1000 }));
+  for (const user of users.filter((u) => u.is_anonymous && u.created_at >= since)) {
+    must(await admin.auth.admin.deleteUser(user.id));
+  }
 }
 
 // Set by global-setup.js, which runs in the parent process; workers inherit it.
@@ -20,8 +28,19 @@ export async function signInAsStaff(page, slug) {
   await expect(page.getByText(/— Staff$/)).toBeVisible();
 }
 
-// "<stamps> / <total> stamps · <code>" line in the staff dashboard's customer list.
-export const staffStampLine = (page, code) => page.getByText(new RegExp(`stamps · ${code}$`));
+export async function joinAsCustomer(page, name, contact) {
+  await page.goto("/");
+  await page.getByPlaceholder("Your name").fill(name);
+  await page.getByPlaceholder("Phone or email").fill(contact);
+  await page.getByRole("button", { name: /^Join / }).click();
+  await expect(page.getByText(`Hey ${name.split(" ")[0]}!`)).toBeVisible();
+}
 
-// The "+ Add stamp" / "Redeem" button on that customer's row.
-export const staffRowButton = (page, code) => staffStampLine(page, code).locator("xpath=../..").getByRole("button");
+// A card's row in the staff dashboard's customer list.
+export const staffRow = (page, code) => page.getByTestId(`customer-row-${code}`);
+
+// "<stamps> / <total> stamps · <code>" line on that row.
+export const staffStampLine = (page, code) => staffRow(page, code).getByText(/stamps · /);
+
+// The "+ Add stamp" / "Redeem" button on that row.
+export const staffRowButton = (page, code) => staffRow(page, code).getByRole("button", { name: /Add stamp|Redeem/ });

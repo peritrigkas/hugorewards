@@ -9,11 +9,16 @@ import { ScanCodeScreen } from "./screens/ScanCodeScreen";
 import { MenuScreen } from "./screens/MenuScreen";
 import { VisitScreen } from "./screens/VisitScreen";
 import { AccountScreen } from "./screens/AccountScreen";
+import { LoggedOutScreen, StaffOnDeviceScreen } from "./screens/DeviceScreens";
+import { EarlierCardBanner } from "./EarlierCardBanner";
 import { useCustomer } from "./useCustomer";
 import { useSecretTap } from "./useSecretTap";
 
 export function CustomerApp({ onStaffAccess }) {
-  const { customer, loading, join, saveDetails, logout, deleteAccount } = useCustomer();
+  const {
+    customer, loading, loggedOut, staffOnDevice, hasEarlierCard,
+    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice,
+  } = useCustomer();
   const [screen, setScreen] = useState("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showPinPrompt, setShowPinPrompt] = useState(false);
@@ -34,8 +39,16 @@ export function CustomerApp({ onStaffAccess }) {
     return <LoadingScreen />;
   }
 
+  if (staffOnDevice) {
+    return <StaffOnDeviceScreen onSignOut={signOutStaffOnDevice} />;
+  }
+
   if (!customer) {
     return <JoinScreen onJoin={join} />;
+  }
+
+  if (loggedOut) {
+    return <LoggedOutScreen onLogBackIn={logBackIn} />;
   }
 
   const subScreen = screen === "cards" || screen === "gifts" || screen === "account";
@@ -47,6 +60,7 @@ export function CustomerApp({ onStaffAccess }) {
   return (
     <div style={{ background: "var(--c-cream)", minHeight: "100vh", maxWidth: 420, margin: "0 auto", fontFamily: "Inter, sans-serif", position: "relative" }}>
       <TopBar onBack={subScreen ? handleBack : null} onMenu={() => setDrawerOpen(true)} onSecretTap={handleSecretTap} onAccount={() => setScreen("account")} />
+      {hasEarlierCard && <EarlierCardBanner code={customer.code} />}
       {screen === "home" && <HomeScreen customer={customer} goToRewards={() => setScreen("rewards")} />}
       {screen === "rewards" && <RewardsHome goToCards={() => setScreen("cards")} goToGifts={() => setScreen("gifts")} />}
       {screen === "cards" && <LoyaltyCardDetail customer={customer} />}

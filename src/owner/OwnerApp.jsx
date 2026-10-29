@@ -1,20 +1,21 @@
 import { clientConfig } from "../client.config";
-import { isRewardReady } from "../lib/loyalty";
-import { STAMPS_FOR_REWARD } from "../loyaltySettings";
+import { findEarlierCards } from "../lib/loyalty";
 import { LoadingScreen } from "../components/LoadingScreen";
+import { CustomerRow } from "./CustomerRow";
 import { ScanPanel } from "./ScanPanel";
 import { StaffLogin } from "./StaffLogin";
 import { useOwnerCustomers } from "./useOwnerCustomers";
 
 export function OwnerApp({ onExit }) {
-  const { session, customers, loading, addStampByCode, resetStamps, signOut } = useOwnerCustomers();
+  const { session, customerOnDevice, customers, loading, addStampByCode, resetStamps, moveCard, signOut } = useOwnerCustomers();
+  const earlierCards = findEarlierCards(customers);
 
   if (session === undefined) {
     return <LoadingScreen />;
   }
 
   if (!session) {
-    return <StaffLogin onLoggedIn={() => {}} />;
+    return <StaffLogin onLoggedIn={() => {}} customerOnDevice={customerOnDevice} />;
   }
 
   return (
@@ -39,17 +40,14 @@ export function OwnerApp({ onExit }) {
           <>
             <ScanPanel customers={customers} onFoundCode={addStampByCode} />
             {customers.map((c) => (
-              <div key={c.code} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid var(--c-border)", borderRadius: 14, padding: "12px 16px", marginBottom: 10, maxWidth: 480, margin: "0 auto 10px" }}>
-                <div>
-                  <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 15, color: "var(--c-dark)" }}>{c.name}</div>
-                  <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)" }}>{c.stamps} / {STAMPS_FOR_REWARD} stamps · {c.code}</div>
-                </div>
-                {isRewardReady(c.stamps, STAMPS_FOR_REWARD) ? (
-                  <button onClick={() => resetStamps(c.code)} style={{ background: "var(--c-gold)", color: "var(--c-dark)", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Redeem</button>
-                ) : (
-                  <button onClick={() => addStampByCode(c.code)} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Add stamp</button>
-                )}
-              </div>
+              <CustomerRow
+                key={c.code}
+                customer={c}
+                earlierCard={earlierCards[c.id]}
+                onAddStamp={addStampByCode}
+                onRedeem={resetStamps}
+                onMoveCard={moveCard}
+              />
             ))}
           </>
         )}

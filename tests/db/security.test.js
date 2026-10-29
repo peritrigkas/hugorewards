@@ -1,17 +1,17 @@
 // Who can read and change what in the shared multi-tenant database.
-// Runs against the scratch Supabase project as three kinds of user: an
-// anonymous app visitor, Hugo's staff, and Daisy's staff. Tests describe the
-// rules we want; ones the database doesn't enforce yet are marked knownHole.
+// Runs against the scratch Supabase project as: a visitor with no session,
+// customers (anonymous accounts, as the app creates on joining), Hugo staff
+// and Daisy staff. Rules the database doesn't enforce yet are marked knownHole.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   admin,
   anonClient,
   cleanup,
   getTenantIds,
-  knownHole,
   readCustomer,
   readCustomerByCode,
   seedCustomer,
+  signInCustomer,
   signInStaff,
   testCode,
 } from "./helpers.js";
@@ -106,10 +106,7 @@ describe("customers — staff", () => {
   });
 
   it("cannot move their own customer to another shop", async () => {
-    // "Allow public update" has no WITH CHECK, but Postgres also checks the
-    // updated row against SELECT policies, and staff can't see other shops'
-    // rows — so this fails with 42501. Anonymous visitors *can* see every row,
-    // which is why the same move is a known hole for them below.
+    // "Staff update own tenant" checks the updated row's tenant too.
     const mine = await seedCustomer(tenants.hugo);
     await hugoStaff.client.from("customers").update({ tenant_id: tenants.daisy }).eq("id", mine.id);
     expect((await readCustomer(mine.id)).tenant_id).toBe(tenants.hugo);
@@ -141,71 +138,210 @@ describe("customers — staff", () => {
   });
 });
 
-describe("customers — anonymous app visitors", () => {
-  it("can sign up to a shop with an empty card", async () => {
-    const code = testCode();
-    const { error } = await anon.from("customers").insert({ name: "New Customer", code, stamps: 0, tenant_id: tenants.daisy });
-    expect(error).toBeNull();
-    expect((await readCustomerByCode(code)).tenant_id).toBe(tenants.daisy);
-  });
-
-  // Today the saved code *is* the customer's proof of identity. Once anonymous
-  // sign-in lands, this becomes "can read the card linked to their own login".
-  it("can look up their own card by its code", async () => {
-    const own = await seedCustomer(tenants.hugo);
-    const { data } = await anon.from("customers").select("*").eq("code", own.code).single();
-    expect(data.id).toBe(own.id);
-  });
-
-  knownHole("cannot sign up with stamps already on the card", async () => {
-    const code = testCode();
-    await anon.from("customers").insert({ name: "Cheater", code, stamps: 9, tenant_id: tenants.hugo });
-    const row = await readCustomerByCode(code);
-    expect(row?.stamps ?? 0).toBe(0);
-  });
-
-  knownHole("cannot sign up without naming a shop", async () => {
-    // The temporary customers_default_tenant trigger files these under hugo.
-    const code = testCode();
-    await anon.from("customers").insert({ name: "No Shop", code });
-    expect(await readCustomerByCode(code)).toBeNull();
-  });
-
-  knownHole("cannot list every customer", async () => {
-    const victim = await seedCustomer(tenants.daisy);
+describe("customers — not signed in", () => {
+  // The app signs in (anonymously) before touching customers, so a visitor
+  // with no session at all gets nothing.
+  it("cannot see any customers", async () => {
+    await seedCustomer(tenants.hugo);
     const { data } = await anon.from("customers").select("id");
-    expect((data ?? []).map((r) => r.id)).not.toContain(victim.id);
-  });
-
-  knownHole("cannot find someone else's card by their phone number or email", async () => {
-    // The app's "rejoin" flow does exactly this lookup (App.jsx handleJoin).
-    const victim = await seedCustomer(tenants.hugo);
-    const { data } = await anon.from("customers").select("*").ilike("contact", victim.contact);
     expect(data ?? []).toEqual([]);
   });
 
-  knownHole("cannot add stamps to a card", async () => {
+  it("cannot sign up", async () => {
+    const code = testCode();
+    await anon.from("customers").insert({ name: "No Session", code, stamps: 0, tenant_id: tenants.hugo });
+    expect(await readCustomerByCode(code)).toBeNull();
+  });
+
+  it("cannot change or delete a card", async () => {
     const victim = await seedCustomer(tenants.hugo, { stamps: 2 });
-    await anon.from("customers").update({ stamps: 9 }).eq("code", victim.code);
-    expect((await readCustomer(victim.id)).stamps).toBe(2);
-  });
-
-  knownHole("cannot change someone else's name or contact", async () => {
-    const victim = await seedCustomer(tenants.hugo);
-    await anon.from("customers").update({ name: "Hijacked", contact: "attacker@test.local" }).eq("id", victim.id);
-    const after = await readCustomer(victim.id);
-    expect([after.name, after.contact]).toEqual([victim.name, victim.contact]);
-  });
-
-  knownHole("cannot move a card to another shop", async () => {
-    const victim = await seedCustomer(tenants.hugo);
-    await anon.from("customers").update({ tenant_id: tenants.daisy }).eq("id", victim.id);
-    expect((await readCustomer(victim.id)).tenant_id).toBe(tenants.hugo);
-  });
-
-  knownHole("cannot delete someone else's card", async () => {
-    const victim = await seedCustomer(tenants.daisy);
+    await anon.from("customers").update({ stamps: 9 }).eq("id", victim.id);
     await anon.from("customers").delete().eq("id", victim.id);
-    expect(await readCustomer(victim.id)).not.toBeNull();
+    expect((await readCustomer(victim.id))?.stamps).toBe(2);
+  });
+
+  it("cannot use the contact check or move cards", async () => {
+    const check = await anon.rpc("contact_has_other_card", { shop_id: tenants.hugo, contact: "x" });
+    const move = await anon.rpc("move_card", { old_code: "A", new_code: "B" });
+    expect(check.error).not.toBeNull();
+    expect(move.error).not.toBeNull();
+  });
+});
+
+describe("customers — customer accounts (anonymous sign-in)", () => {
+  let alice;
+  let bob;
+
+  beforeAll(async () => {
+    alice = await signInCustomer();
+    bob = await signInCustomer();
+  });
+
+  // A fresh account with its own card (one card per shop per account).
+  const customerWithCard = async (tenantId, fields = {}) => {
+    const customer = await signInCustomer();
+    const card = await seedCustomer(tenantId, { user_id: customer.userId, ...fields });
+    return { ...customer, card };
+  };
+
+  it("can join a shop with an empty card linked to their account", async () => {
+    const code = testCode();
+    const { error } = await alice.client
+      .from("customers")
+      .insert({ name: "Alice", contact: `${code}@test.local`, code, stamps: 0, tenant_id: tenants.daisy, user_id: alice.userId });
+    expect(error).toBeNull();
+    const row = await readCustomerByCode(code);
+    expect([row.tenant_id, row.user_id]).toEqual([tenants.daisy, alice.userId]);
+  });
+
+  it("can have only one card per shop", async () => {
+    const { client, userId } = await customerWithCard(tenants.hugo);
+    const code = testCode();
+    await client.from("customers").insert({ name: "Second", code, stamps: 0, tenant_id: tenants.hugo, user_id: userId });
+    expect(await readCustomerByCode(code)).toBeNull();
+  });
+
+  it("see only their own card", async () => {
+    const { client, card } = await customerWithCard(tenants.hugo);
+    await seedCustomer(tenants.hugo);
+    await seedCustomer(tenants.daisy);
+    const { data } = await client.from("customers").select("id");
+    expect(data.map((r) => r.id)).toEqual([card.id]);
+  });
+
+  it("cannot read someone else's card, even knowing its code", async () => {
+    const victim = await seedCustomer(tenants.hugo);
+    const { data } = await alice.client.from("customers").select("*").eq("code", victim.code);
+    expect(data ?? []).toEqual([]);
+  });
+
+  it("cannot find someone else's card by their phone number or email", async () => {
+    const victim = await seedCustomer(tenants.hugo);
+    const { data } = await alice.client.from("customers").select("*").ilike("contact", victim.contact);
+    expect(data ?? []).toEqual([]);
+  });
+
+  it("cannot sign up with stamps already on the card", async () => {
+    const code = testCode();
+    await bob.client.from("customers").insert({ name: "Cheater", code, stamps: 9, tenant_id: tenants.hugo, user_id: bob.userId });
+    expect(await readCustomerByCode(code)).toBeNull();
+  });
+
+  it("cannot sign up without naming a shop", async () => {
+    const code = testCode();
+    await bob.client.from("customers").insert({ name: "No Shop", code, stamps: 0, user_id: bob.userId });
+    expect(await readCustomerByCode(code)).toBeNull();
+  });
+
+  it("cannot create a card on someone else's account", async () => {
+    const code = testCode();
+    await alice.client.from("customers").insert({ name: "Planted", code, stamps: 0, tenant_id: tenants.hugo, user_id: bob.userId });
+    expect(await readCustomerByCode(code)).toBeNull();
+  });
+
+  it("can change their own name and contact", async () => {
+    const { client, card } = await customerWithCard(tenants.hugo);
+    const { error } = await client.from("customers").update({ name: "Renamed", contact: "new@test.local" }).eq("id", card.id);
+    expect(error).toBeNull();
+    const after = await readCustomer(card.id);
+    expect([after.name, after.contact]).toEqual(["Renamed", "new@test.local"]);
+  });
+
+  it("cannot add stamps to their own card", async () => {
+    const { client, card } = await customerWithCard(tenants.hugo, { stamps: 2 });
+    await client.from("customers").update({ stamps: 9 }).eq("id", card.id);
+    expect((await readCustomer(card.id)).stamps).toBe(2);
+  });
+
+  it("cannot move their own card to another shop or change its code", async () => {
+    const { client, card } = await customerWithCard(tenants.hugo);
+    await client.from("customers").update({ tenant_id: tenants.daisy }).eq("id", card.id);
+    await client.from("customers").update({ code: testCode() }).eq("id", card.id);
+    const after = await readCustomer(card.id);
+    expect([after.tenant_id, after.code]).toEqual([tenants.hugo, card.code]);
+  });
+
+  it("cannot add stamps to, rename, move or delete someone else's card", async () => {
+    const victim = await seedCustomer(tenants.hugo, { stamps: 2 });
+    await alice.client.from("customers").update({ stamps: 9 }).eq("id", victim.id);
+    await alice.client.from("customers").update({ name: "Hijacked" }).eq("id", victim.id);
+    await alice.client.from("customers").update({ tenant_id: tenants.daisy }).eq("id", victim.id);
+    await alice.client.from("customers").delete().eq("id", victim.id);
+    const after = await readCustomer(victim.id);
+    expect([after.stamps, after.name, after.tenant_id]).toEqual([2, victim.name, tenants.hugo]);
+  });
+
+  it("can delete their own card", async () => {
+    const { client, card } = await customerWithCard(tenants.daisy);
+    const { count } = await client.from("customers").delete({ count: "exact" }).eq("id", card.id);
+    expect(count).toBe(1);
+    expect(await readCustomer(card.id)).toBeNull();
+  });
+
+  describe("already-have-a-card check", () => {
+    const check = (client, tenantId, contact) => client.rpc("contact_has_other_card", { shop_id: tenantId, contact });
+
+    it("is true when another card in the shop has the same contact, ignoring spaces and case", async () => {
+      const contact = `${testCode()} Old@Test.local`;
+      await seedCustomer(tenants.hugo, { contact });
+      const { data } = await check(alice.client, tenants.hugo, contact.toUpperCase().replace(" ", "   "));
+      expect(data).toBe(true);
+    });
+
+    it("is false for the customer's own card and for other shops", async () => {
+      const contact = `${testCode()}@test.local`;
+      const { client } = await customerWithCard(tenants.hugo, { contact });
+      await seedCustomer(tenants.daisy, { contact });
+      expect((await check(client, tenants.hugo, contact)).data).toBe(false);
+    });
+
+    it("answers only true/false, never details of the other card", async () => {
+      const contact = `${testCode()}@test.local`;
+      await seedCustomer(tenants.hugo, { contact });
+      const { data } = await check(alice.client, tenants.hugo, contact);
+      expect(data).toBe(true);
+    });
+  });
+});
+
+describe("move card (customer on a new phone)", () => {
+  it("staff move an old card onto the new phone's account; the new empty card is removed", async () => {
+    const oldCard = await seedCustomer(tenants.hugo, { stamps: 5 });
+    const newPhone = await signInCustomer();
+    const newCard = await seedCustomer(tenants.hugo, { user_id: newPhone.userId, stamps: 0 });
+
+    const { error } = await hugoStaff.client.rpc("move_card", { old_code: oldCard.code, new_code: newCard.code });
+    expect(error).toBeNull();
+    expect(await readCustomer(newCard.id)).toBeNull();
+
+    const { data } = await newPhone.client.from("customers").select("code, stamps").single();
+    expect(data).toEqual({ code: oldCard.code, stamps: 5 });
+  });
+
+  it("another shop's staff cannot move the card", async () => {
+    const oldCard = await seedCustomer(tenants.hugo);
+    const newPhone = await signInCustomer();
+    const newCard = await seedCustomer(tenants.hugo, { user_id: newPhone.userId });
+    const { error } = await daisyStaff.client.rpc("move_card", { old_code: oldCard.code, new_code: newCard.code });
+    expect(error).not.toBeNull();
+    expect((await readCustomer(oldCard.id)).user_id).toBeNull();
+    expect(await readCustomer(newCard.id)).not.toBeNull();
+  });
+
+  it("customers cannot move cards, not even onto their own phone", async () => {
+    const oldCard = await seedCustomer(tenants.hugo, { stamps: 7 });
+    const thief = await signInCustomer();
+    const thiefCard = await seedCustomer(tenants.hugo, { user_id: thief.userId });
+    const { error } = await thief.client.rpc("move_card", { old_code: oldCard.code, new_code: thiefCard.code });
+    expect(error).not.toBeNull();
+    expect((await readCustomer(oldCard.id)).user_id).toBeNull();
+  });
+
+  it("is refused when the new card isn't linked to a phone", async () => {
+    const oldCard = await seedCustomer(tenants.hugo);
+    const walkIn = await seedCustomer(tenants.hugo);
+    const { error } = await hugoStaff.client.rpc("move_card", { old_code: oldCard.code, new_code: walkIn.code });
+    expect(error?.message).toMatch(/not linked to a phone/);
+    expect(await readCustomer(walkIn.id)).not.toBeNull();
   });
 });

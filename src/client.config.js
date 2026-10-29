@@ -33,7 +33,7 @@ export const clientConfig = {
   },
 
   joinTagline: "Join up — buy 9, the 10th's on the cow.",
-  joinReturningNote: "Already joined? Enter the same phone or email to get your card back.",
+  joinReturningNote: "Had a card on another phone? Staff can move it to this one.",
   greetingSubtitle: "Keep on mooing for more rewards!",
   loadingMessage: "You're just a moo away from making your day amazing.",
 
