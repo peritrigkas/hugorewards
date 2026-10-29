@@ -40,7 +40,7 @@ column as each step's PR merges.
 
 | # | Step | Scope | Done when | Status | PR |
 |---|---|---|---|---|---|
-| 0 | Loading screen 5s → 3s | One-line change to `CustomerApp`'s minimum loading delay | — | ✅ Done | — |
+| 0 | Loading screen 5s → 3s | One-line change to `CustomerApp`'s minimum loading delay | — | ✅ Done | [#13](https://github.com/peritrigkas/hugorewards/pull/13) |
 | 1 | **Smoke tests** | Playwright against the scratch project, Hugo and Daisy. Customer: sign up → card + QR → edit details → log out / rejoin → delete. Staff: log in → stamp by code → reward → reset. `npm test` runs unit + DB + smoke | Green against today's code | 🚧 In progress | — |
 | 2 | **Data layer** | Every Supabase call moves to `src/lib/customers.js` / `src/lib/staffAuth.js`; pure logic (`makeCode`, stamp/reward maths, code regex) to `src/lib/loyalty.js` with unit tests | Tests green; no `supabase.` calls left in components | ⏳ Not started | — |
 | 3 | **Split components** | Pure move into `src/components/` (CowMark, BrandMark, stamp cards, QR, TopBar, nav), `src/customer/screens/` (Join, Home, Visit, Account, Menu, …), `src/owner/` (OwnerApp, StaffLogin, PinPrompt, ScanPanel). `App.jsx` becomes a ~15-line customer/owner switch | Tests green; no file over ~250 lines | ⏳ Not started | — |
