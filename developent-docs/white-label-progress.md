@@ -47,11 +47,11 @@ home-screen icon/name.
 
 | Feature | Status | PR |
 |---|---|---|
-| `clients/<slug>/` manifest convention (appId, appName, tenantSlug, icon/splash colors) | ✅ Done | — |
-| "New client" scaffold script (`npm run new-client`) | ✅ Done | — |
-| Android `appId`/`appName`/Java-package substitution script (`scripts/apply-client-identity.mjs`) | ✅ Done — verified against a scratch worktree clone (rename + revert both clean) | — |
-| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | 🚧 Wired up, but **untested end-to-end on this dev machine** — `@capacitor/assets`' pinned `sharp@0.32.6` has no prebuilt binary for Node 24 on Windows x64 in this environment. Should work as-is on Mac/Linux or with an older Node; needs verifying there | — |
-| `npm run build-client` orchestrator (identity + assets + web build + `cap sync`) | ✅ Done, same sharp caveat as above for the asset-generation step | — |
+| `clients/<slug>/` manifest convention (appId, appName, tenantSlug, icon/splash colors) — validated on every load | ✅ Done | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| "New client" scaffold script (`npm run new-client`) | ✅ Done | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| Android `appId`/`appName`/Java-package substitution script (`scripts/apply-client-identity.mjs`) | ✅ Done — verified on this machine: app-name escaping, whole-package move (incl. nested packages), `npm run reset-client` restore | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | 🚧 Wired up, but **untested end-to-end** — `@capacitor/assets@3.0.5` (run on demand via `npx`, not a devDependency) pulls in `sharp@0.32.6`, which has no prebuilt binary for Node 24 on Windows x64. Needs a first run on a Mac (see `clients/README.md`) | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| `npm run build-client` orchestrator (identity + assets + web build + `cap sync`) | ✅ Done — Hugo builds end-to-end on this machine; other clients hit the sharp caveat above, and the automatic rollback was verified on exactly that failure | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | iOS bundle-id + signing/provisioning setup (`@capacitor/ios` not yet installed) | ⏳ Not started | — |
 | iOS CI (GitHub Actions/Codemagic) | ⏸️ Deferred until 2nd client confirms it's worth automating | — |
 
@@ -81,6 +81,7 @@ section it updates or overrides.
 | 2026-09-23 | Per-client packaging builds one client at a time against the single shared `android/` project (`clients/<slug>/client.json` + `scripts/apply-client-identity.mjs` rewrite its appId/appName/Java package in place), rather than keeping N separate checked-in Android platform folders | Matches the existing low-volume, one-release-at-a-time manual workflow (same spirit as the iOS CI deferral) instead of adding the ongoing overhead of N parallel native projects for ~10 prospective clients | §6, Epic 3 |
 | 2026-09-23 | Client logo intake uses `@capacitor/assets` "Easy Mode" (single `logo.png` + a background color) instead of Custom Mode (5 separately-sized layer images) | Clients are non-technical business owners — asking for one square logo file is realistic, asking for pre-cut icon-foreground/background/splash layers is not | §2 Brand identity, Epic 3 |
 | 2026-10-29 | Added a temporary `customers_default_tenant` trigger on the live Hugo project (`supabase-customers-default-tenant.sql`) that fills `tenant_id` with the `hugo` tenant when omitted, and made the signup insert send `clientConfig.tenantId` | The tenants migration made `customers.tenant_id` NOT NULL with no default, but PR #6's signup insert never sent it — zero signups landed between 2026-09-23 and 2026-10-29. The trigger fixes already-installed Android builds immediately; the code fix is the real fix. **Must drop the trigger before onboarding a 2nd tenant**, or their rows missing `tenant_id` would silently land under hugo | §3 Option B |
+| 2026-10-29 | The committed `android/` + `capacitor.config.json` are the baseline (Hugo) identity: `build-client` refuses to start unless they're clean, restores them from git if any step fails, and `npm run reset-client` restores them after a client build. The tenant slug goes to the web build as a process env var, not into `.env.local` | Review of #7 found switching back to Hugo was impossible (no Hugo `logo.png`), `.env.local` silently kept the last client's tenant for later Hugo builds, and a failed build left `android/` half-switched and easy to commit. Git already holds the baseline, so restoring from it is simpler than snapshotting | Epic 3 |
 
 ## Deviations from the original strategy doc
 

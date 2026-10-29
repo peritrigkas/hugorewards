@@ -3,7 +3,7 @@
 // developent-docs/white-label-progress.md Epic 3.
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { CLIENTS_DIR, assertValidSlug, assertValidAppId } from "./lib/clientManifest.mjs";
+import { clientDir, assertValidSlug, assertValidAppId, DEFAULT_BG_COLOR } from "./lib/clientManifest.mjs";
 
 const [slug, appId, appName] = process.argv.slice(2);
 
@@ -16,7 +16,7 @@ if (!slug || !appId || !appName) {
 assertValidSlug(slug);
 assertValidAppId(appId);
 
-const dir = join(CLIENTS_DIR, slug);
+const dir = clientDir(slug);
 if (existsSync(dir)) {
   console.error(`${dir} already exists.`);
   process.exit(1);
@@ -35,8 +35,8 @@ writeFileSync(
       appName,
       // Hex colors used as the icon/splash background when generating
       // Android assets from logo.png (see scripts/generate-client-assets.mjs).
-      iconBackgroundColor: "#ffffff",
-      splashBackgroundColor: "#ffffff",
+      iconBackgroundColor: DEFAULT_BG_COLOR,
+      splashBackgroundColor: DEFAULT_BG_COLOR,
     },
     null,
     2
