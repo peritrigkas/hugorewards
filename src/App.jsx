@@ -5,14 +5,19 @@ import {
   ChevronRight, ChevronLeft, Gift, X, Instagram, Facebook, Music2,
   Bean, Coffee, Croissant, Cookie, IceCreamCone, Leaf, Flower2, Scissors, Dumbbell, PawPrint, Heart,
 } from "lucide-react";
-import { supabase } from "./supabaseClient";
 import { Capacitor } from "@capacitor/core";
 import { BarcodeScanner } from "@capacitor-mlkit/barcode-scanning";
 import { clientConfig } from "./client.config";
+import {
+  createCustomer, deleteCustomer, findCustomerByContact, getCustomerByCode, listCustomers,
+  setStamps, subscribeToAllCustomers, subscribeToCustomer, updateCustomerDetails,
+} from "./lib/customers";
+import { customerCodePattern, isRewardReady, makeCustomerCode, nextStampCount } from "./lib/loyalty";
+import { clearSavedCode, getSavedCode, saveCode } from "./lib/savedCode";
+import { getStaffSession, onStaffSessionChange, signInStaff, signOutStaff } from "./lib/staffAuth";
 
 const STAMPS_FOR_REWARD = clientConfig.loyalty.stampsForReward;
-const STORAGE_KEY = `${clientConfig.id}_customer_code`;
-const CUSTOMER_CODE_RE = new RegExp(`^${clientConfig.loyalty.codePrefix}-[0-9A-Z]{5}$`);
+const CUSTOMER_CODE_RE = customerCodePattern(clientConfig.loyalty.codePrefix);
 // Hands-free hardware scanners can re-fire the same read (a shaky hand holding
 // the trigger, or a scanner without a configured reread delay) — ignore a repeat
 // of the same code within this window instead of double-stamping.
@@ -21,10 +26,6 @@ const RESCAN_COOLDOWN_MS = 4000;
 // determined enough could find it. Fine for keeping casual customers out of the
 // staff view; replace with real Supabase Auth before this matters for real security.
 const STAFF_PIN = clientConfig.staffPin;
-
-function makeCode() {
-  return `${clientConfig.loyalty.codePrefix}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-}
 
 function CowMark({ size = 40, style }) {
   return (
@@ -88,7 +89,7 @@ function StampCard({ stamps }) {
   // The cow card has exactly one spot per stamp, so it only fits that many.
   if (iconName === "cow" && STAMPS_FOR_REWARD === COW_SPOTS.length) return <CowStampCard stamps={stamps} />;
   const Icon = STAMP_ICONS[iconName];
-  const isComplete = stamps >= STAMPS_FOR_REWARD;
+  const isComplete = isRewardReady(stamps, STAMPS_FOR_REWARD);
   const slot = { width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box" };
   return (
     <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, maxWidth: 300, margin: "0 auto" }}>
@@ -109,7 +110,7 @@ function StampCard({ stamps }) {
 }
 
 function CowStampCard({ stamps }) {
-  const isComplete = stamps >= STAMPS_FOR_REWARD;
+  const isComplete = isRewardReady(stamps, STAMPS_FOR_REWARD);
   const free = COW_FREE_SPOT;
   return (
     <svg width="100%" viewBox="-2 -4 160 100" style={{ maxWidth: 320, display: "block", margin: "0 auto" }}>
@@ -975,9 +976,9 @@ function StaffLogin({ onLoggedIn }) {
   const submit = async () => {
     setBusy(true);
     setError("");
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const ok = await signInStaff(email, password);
     setBusy(false);
-    if (authError) {
+    if (!ok) {
       setError("Incorrect email or password.");
     } else {
       onLoggedIn();
@@ -1011,38 +1012,35 @@ function OwnerApp({ onExit }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
-    return () => listener.subscription.unsubscribe();
+    getStaffSession().then(setSession);
+    return onStaffSessionChange(setSession);
   }, []);
 
   const fetchCustomers = async () => {
-    const { data, error } = await supabase.from("customers").select("*").order("created_at", { ascending: true });
-    if (!error && data) setCustomers(data);
+    const data = await listCustomers();
+    if (data) setCustomers(data);
   };
 
   useEffect(() => {
     if (!session) return;
     fetchCustomers().finally(() => setLoading(false));
-    const channel = supabase.channel("owner-customers").on("postgres_changes", { event: "*", schema: "public", table: "customers" }, fetchCustomers).subscribe();
-    return () => supabase.removeChannel(channel);
+    return subscribeToAllCustomers(fetchCustomers);
   }, [session]);
 
   const addStampByCode = async (code) => {
     const target = customers.find((c) => c.code === code);
     if (!target) return { ok: false, message: "No customer found for that code" };
-    const nextStamps = Math.min(target.stamps + 1, STAMPS_FOR_REWARD);
-    const { error } = await supabase.from("customers").update({ stamps: nextStamps }).eq("code", code);
-    if (error) return { ok: false, message: "Couldn't save — try again" };
+    const saved = await setStamps(code, nextStampCount(target.stamps, STAMPS_FOR_REWARD));
+    if (!saved) return { ok: false, message: "Couldn't save — try again" };
     return { ok: true, name: target.name };
   };
 
   const resetStamps = async (code) => {
-    await supabase.from("customers").update({ stamps: 0 }).eq("code", code);
+    await setStamps(code, 0);
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await signOutStaff();
   };
 
   if (session === undefined) {
@@ -1080,7 +1078,7 @@ function OwnerApp({ onExit }) {
                   <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 15, color: "var(--c-dark)" }}>{c.name}</div>
                   <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)" }}>{c.stamps} / {STAMPS_FOR_REWARD} stamps · {c.code}</div>
                 </div>
-                {c.stamps >= STAMPS_FOR_REWARD ? (
+                {isRewardReady(c.stamps, STAMPS_FOR_REWARD) ? (
                   <button onClick={() => resetStamps(c.code)} style={{ background: "var(--c-gold)", color: "var(--c-dark)", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Redeem</button>
                 ) : (
                   <button onClick={() => addStampByCode(c.code)} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>+ Add stamp</button>
@@ -1219,12 +1217,12 @@ function CustomerApp({ onStaffAccess }) {
   };
 
   const fetchMe = async (code) => {
-    const { data, error } = await supabase.from("customers").select("*").eq("code", code).single();
-    if (!error && data) setCustomer(data);
+    const data = await getCustomerByCode(code);
+    if (data) setCustomer(data);
   };
 
   useEffect(() => {
-    const savedCode = localStorage.getItem(STORAGE_KEY);
+    const savedCode = getSavedCode();
     const minDelay = new Promise((resolve) => setTimeout(resolve, 3000));
     if (savedCode) {
       Promise.all([fetchMe(savedCode), minDelay]).finally(() => setLoading(false));
@@ -1235,61 +1233,47 @@ function CustomerApp({ onStaffAccess }) {
 
   useEffect(() => {
     if (!customer) return;
-    const channel = supabase
-      .channel(`customer-${customer.code}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "customers", filter: `code=eq.${customer.code}` }, (payload) => {
-        setCustomer(payload.new);
-      })
-      .subscribe();
-    return () => supabase.removeChannel(channel);
+    return subscribeToCustomer(customer.code, setCustomer);
   }, [customer?.code]);
 
   const handleJoin = async (name, contact) => {
     // Returning customer: if this contact already has a card, log them back into
     // it instead of creating a duplicate — fixes losing stamps on logout/rejoin.
     if (contact) {
-      const { data: existing } = await supabase
-        .from("customers")
-        .select("*")
-        .ilike("contact", contact.trim())
-        .limit(1)
-        .maybeSingle();
+      const existing = await findCustomerByContact(contact);
       if (existing) {
-        localStorage.setItem(STORAGE_KEY, existing.code);
+        saveCode(existing.code);
         setCustomer(existing);
         return true;
       }
     }
-    const code = makeCode();
-    // tenantId is only set if applyTenantConfig() resolved the tenants row;
-    // otherwise the DB's customers_default_tenant trigger fills in hugo.
-    const row = { name, contact, code, stamps: 0, ...(clientConfig.tenantId && { tenant_id: clientConfig.tenantId }) };
-    const { data, error } = await supabase.from("customers").insert(row).select().single();
-    if (error) return false;
-    localStorage.setItem(STORAGE_KEY, code);
+    const code = makeCustomerCode(clientConfig.loyalty.codePrefix);
+    const data = await createCustomer({ name, contact, code, tenantId: clientConfig.tenantId });
+    if (!data) return false;
+    saveCode(code);
     setCustomer(data);
     return true;
   };
 
   const handleSaveAccount = async (name, contact) => {
-    const { data, error } = await supabase.from("customers").update({ name, contact }).eq("code", customer.code).select().single();
-    if (error) return false;
+    const data = await updateCustomerDetails(customer.code, { name, contact });
+    if (!data) return false;
     setCustomer(data);
     return true;
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    clearSavedCode();
     setCustomer(null);
     setScreen("home");
   };
 
   const handleDeleteAccount = async () => {
-    const { error, count } = await supabase.from("customers").delete({ count: "exact" }).eq("code", customer.code);
-    if (error || !count) {
+    const deleted = await deleteCustomer(customer.code);
+    if (!deleted) {
       return false;
     }
-    localStorage.removeItem(STORAGE_KEY);
+    clearSavedCode();
     setCustomer(null);
     setScreen("home");
     return true;

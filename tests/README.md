@@ -6,11 +6,13 @@ Scratch", ref `fjclbclxdecxqiqvbfhj`), never the live Hugo project.
 
 | Layer | What it checks | Tool | Command | Where | Runtime |
 |---|---|---|---|---|---|
+| **Unit** | Pure logic: customer codes, stamp/reward maths | Vitest | `npm run test:unit` | `tests/unit/` | <1s |
 | **Database security** | Who can read and change what in the shared database (row-level security) | Vitest + supabase-js | `npm run test:db` | `tests/db/` | ~8s |
 | **Smoke (end-to-end)** | The main customer and staff flows in a real browser, for each shop | Playwright | `npm run test:smoke` | `tests/smoke/` | ~30s |
-| **Unit** *(planned)* | Pure logic: customer codes, stamp/reward maths | Vitest | — | — | — |
 
-`npm test` runs database security, then smoke.
+`npm test` runs unit, then database security, then smoke, stopping at the
+first layer that fails. Unit tests need no setup or network; the other two
+need the setup below.
 
 ## Setup (once per machine)
 
@@ -39,6 +41,21 @@ No staff passwords or test data need setting up; the tests create their own.
 - Every row a test creates is tagged and deleted before and after the run:
   customer codes starting `RLSTEST-` (database layer), contacts matching
   `smoke-…@test.local` (smoke layer). A crashed run is cleaned up by the next.
+
+## Unit tests (`tests/unit/`)
+
+Fast tests for pure functions in `src/lib/`. The code under test touches no
+database, storage or tenant config: callers pass those values in (e.g. the
+code prefix and stamps-for-reward), so tests can cover any shop's settings.
+
+- `loyalty.test.js`: customer code generation and format check, next stamp
+  count, reward ready. A known bug (short codes from a "round" random number)
+  is written as the desired behaviour and marked `it.fails` with
+  `[KNOWN BUG]`, the same pattern as the database layer's known holes below.
+
+The database functions in `src/lib/customers.js` and `src/lib/staffAuth.js`
+are covered by the smoke tests, which exercise them against a real database,
+rather than by unit tests with a mocked Supabase.
 
 ## Database security tests (`tests/db/`)
 
@@ -135,6 +152,9 @@ doesn't import Vitest or Playwright, so either can use it.
 
 ## Adding tests
 
+- **New pure logic:** put it in `src/lib/` as a function that takes its inputs
+  as parameters (no direct `clientConfig`/Supabase access), and test it in
+  `tests/unit/`.
 - **A new database rule:** add it to `tests/db/security.test.js` as the desired
   behaviour. If the database doesn't enforce it yet, use `knownHole` and add it
   to the checklist in `white-label-progress.md`.
