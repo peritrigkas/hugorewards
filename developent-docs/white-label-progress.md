@@ -37,6 +37,7 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | RLS policies scoped by `tenant_id` | ✅ Applied live — security advisor clean (no new findings) | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
 | Staff auth → tenant mapping (`staff_tenant` table) | ✅ Applied live — `staff@hugocoffee.com` mapped to the `hugo` tenant | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ✅ Done | [#6](https://github.com/peritrigkas/hugorewards/pull/6) |
+| Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | PR pending |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
@@ -75,6 +76,7 @@ section it updates or overrides.
 | 2026-09-23 | Falls back silently to the bundled Hugo `client.config.js` if the `tenants` table doesn't exist yet, the slug isn't found, or the fetch fails/errors | Kept as a safety net for future per-client builds / local dev without Supabase, even though the live Hugo project now has the migration applied | §3 Option B |
 | 2026-09-23 | Applied `supabase-schema-tenants.sql` to the live Hugo Supabase project (ref `ubniiattgwoouziejubu`) | Epic 2 groundwork (schema + RLS) was already verified against the scratch project; frontend tenant-resolution (PR #6) landed first so the app has something to use the new schema for | §3 Option B |
 | 2026-09-23 | Mapped `staff@hugocoffee.com` to the `hugo` tenant in `staff_tenant` immediately after applying the migration | The new tenant-scoped RLS policies ("Staff read/update own tenant") match on `staff_tenant.tenant_id`; with 0 rows in that table right after migration, the existing staff login would have lost visibility into all customers in the owner dashboard until mapped | §3 Option B |
+| 2026-10-29 | Added a temporary `customers_default_tenant` trigger on the live Hugo project (`supabase-customers-default-tenant.sql`) that fills `tenant_id` with the `hugo` tenant when omitted, and made the signup insert send `clientConfig.tenantId` | The tenants migration made `customers.tenant_id` NOT NULL with no default, but PR #6's signup insert never sent it — zero signups landed between 2026-09-23 and 2026-10-29. The trigger fixes already-installed Android builds immediately; the code fix is the real fix. **Must drop the trigger before onboarding a 2nd tenant**, or their rows missing `tenant_id` would silently land under hugo | §3 Option B |
 
 ## Deviations from the original strategy doc
 
