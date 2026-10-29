@@ -10,8 +10,9 @@
     "new-client": "node scripts/new-client.mjs",
     "build-client": "node scripts/build-client.mjs",
     "reset-client": "node scripts/reset-client.mjs",
+    "test": "npm run test:unit && npm run test:db && npm run test:smoke",
+    "test:unit": "vitest run tests/unit",
     "test:db": "vitest run tests/db",
-    "test": "npm run test:db && npm run test:smoke",
     "test:smoke": "playwright test"
   },
   "dependencies": {
