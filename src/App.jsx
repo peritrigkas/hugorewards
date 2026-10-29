@@ -1225,7 +1225,7 @@ function CustomerApp({ onStaffAccess }) {
 
   useEffect(() => {
     const savedCode = localStorage.getItem(STORAGE_KEY);
-    const minDelay = new Promise((resolve) => setTimeout(resolve, 5000));
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 3000));
     if (savedCode) {
       Promise.all([fetchMe(savedCode), minDelay]).finally(() => setLoading(false));
     } else {
