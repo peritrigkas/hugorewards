@@ -10,7 +10,9 @@
     "new-client": "node scripts/new-client.mjs",
     "build-client": "node scripts/build-client.mjs",
     "reset-client": "node scripts/reset-client.mjs",
-    "test:db": "vitest run tests/db"
+    "test:db": "vitest run tests/db",
+    "test": "npm run test:db && npm run test:smoke",
+    "test:smoke": "playwright test"
   },
   "dependencies": {
     "@capacitor-mlkit/barcode-scanning": "^8.1.0",
@@ -24,6 +26,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.0",
     "vitest": "^3.2.4"

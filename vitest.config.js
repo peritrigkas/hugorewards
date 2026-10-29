@@ -1,14 +1,12 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   test: {
+    // Playwright smoke tests are *.spec.js and run separately (npm run test:smoke).
     include: ["tests/**/*.test.js"],
-    // Only SCRATCH_* vars, so the live project's VITE_* keys in .env can never
-    // leak into a test run.
-    env: loadEnv(mode, process.cwd(), "SCRATCH_"),
     // DB tests share one scratch project and its staff accounts.
     fileParallelism: false,
     testTimeout: 20000,
     hookTimeout: 60000,
   },
-}));
+});

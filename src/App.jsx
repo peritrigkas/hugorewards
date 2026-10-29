@@ -174,7 +174,7 @@ function TopBar({ onBack, onMenu, onSecretTap, onAccount }) {
       >
         {clientConfig.brandName}
       </div>
-      <User color="var(--c-cream)" size={24} onClick={onAccount} style={{ cursor: onAccount ? "pointer" : "default" }} />
+      <User data-testid="open-account" color="var(--c-cream)" size={24} onClick={onAccount} style={{ cursor: onAccount ? "pointer" : "default" }} />
     </div>
   );
 }
@@ -226,7 +226,7 @@ function BottomNav({ screen, navigate }) {
       {tabs.map((t, i) => {
         const isActive = t.screen === "rewards" ? rewardsGroup.includes(screen) : t.screen === screen;
         return (
-          <div key={i} onClick={() => navigate(t.screen)} style={{ flex: 1, textAlign: "center", cursor: "pointer" }}>
+          <div key={i} data-testid={`nav-${t.screen}`} onClick={() => navigate(t.screen)} style={{ flex: 1, textAlign: "center", cursor: "pointer" }}>
             <t.icon color={isActive ? "var(--c-gold)" : "var(--c-inactive)"} size={22} style={{ margin: "0 auto" }} />
             <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: isActive ? "var(--c-gold)" : "var(--c-inactive)", marginTop: 4 }}>{t.label}</div>
           </div>
