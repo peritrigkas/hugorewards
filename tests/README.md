@@ -7,8 +7,8 @@ Scratch", ref `fjclbclxdecxqiqvbfhj`), never the live Hugo project.
 | Layer | What it checks | Tool | Command | Where | Runtime |
 |---|---|---|---|---|---|
 | **Unit** | Pure logic: customer codes, stamp/reward maths | Vitest | `npm run test:unit` | `tests/unit/` | <1s |
-| **Database security** | Who can read and change what in the shared database (row-level security) | Vitest + supabase-js | `npm run test:db` | `tests/db/` | ~8s |
-| **Smoke (end-to-end)** | The main customer and staff flows in a real browser, for each shop | Playwright | `npm run test:smoke` | `tests/smoke/` | ~40s |
+| **Database security** | Who can read and change what in the shared database (row-level security) | Vitest + supabase-js | `npm run test:db` | `tests/db/` | ~12s |
+| **Smoke (end-to-end)** | The main customer and staff flows in a real browser, for each shop | Playwright | `npm run test:smoke` | `tests/smoke/` | ~70s |
 
 `npm test` runs unit, then database security, then smoke, stopping at the
 first layer that fails. Unit tests need no setup or network; the other two
@@ -25,6 +25,12 @@ need the setup below.
      `sb_secret_…` key). `.env.test.local` is git-ignored; never commit it or
      paste it anywhere.
 
+4. In the scratch project's dashboard: **Authentication → Sign In /
+   Providers → "Allow anonymous sign-ins"** on (customers sign in
+   anonymously), and **Authentication → Rate Limits → anonymous sign-ins**
+   raised to about 300/hour. Each full run creates a few dozen anonymous
+   accounts, and the default 30/hour would block repeated runs.
+
 No staff passwords or test data need setting up; the tests create their own.
 
 ## Safety rules (all layers)
@@ -33,14 +39,18 @@ No staff passwords or test data need setting up; the tests create their own.
   in `.env` can't leak into a run.
 - `tests/support/scratch.js` **refuses to run** if the URL is the live project.
 - The service-role key is used only for setup, cleanup and checking results.
-  The behaviour under test always runs as an anonymous visitor or a signed-in
-  staff member, just like the real app.
+  The behaviour under test always runs as a visitor, a customer's anonymous
+  account or a signed-in staff member, just like the real app.
 - Test staff accounts get a **new random password every run**, so no password
   is stored anywhere. Each layer has its own accounts (`rls-test-staff-…`,
   `smoke-staff-…@test.local`), so running both at once is safe.
 - Every row a test creates is tagged and deleted before and after the run:
   customer codes starting `RLSTEST-` (database layer), contacts matching
   `smoke-…@test.local` (smoke layer). A crashed run is cleaned up by the next.
+- Anonymous customer accounts are deleted after each run: the database layer
+  deletes the ones it created; the smoke layer deletes every anonymous account
+  created since its run started. So run the two layers **one after the other**
+  (as `npm test` does), not at the same time.
 
 ## Unit tests (`tests/unit/`)
 
@@ -59,28 +69,34 @@ rather than by unit tests with a mocked Supabase.
 
 ## Database security tests (`tests/db/`)
 
-`security.test.js` signs in as three kinds of user (an **anonymous app
-visitor**, **Hugo staff** and **Daisy staff**) and tries reads and writes on
-`tenants`, `staff_tenant` and `customers`. After each attempted write it reads
-the row back with the service-role client, because Postgres row-level security
-often blocks a write *silently* (0 rows changed, no error).
+`security.test.js` acts as every kind of user and tries reads and writes on
+`tenants`, `staff_tenant` and `customers`, plus the `contact_has_other_card`
+and `move_card` database functions:
 
-**Known holes.** Some rules the database *should* enforce but doesn't yet (the
-anonymous `customers` policies on the "Before onboarding a 2nd client"
-checklist in `developent-docs/white-label-progress.md`) are written as the
-desired behaviour and marked `knownHole(...)`:
+- a **visitor with no session**: gets nothing from `customers`;
+- **customers**: anonymous accounts, as the app creates on joining
+  (`signInCustomer()`), each with their own card or none;
+- **Hugo staff** and **Daisy staff**.
 
-- Today they fail, and Vitest counts an expected failure as a **pass**, so the
-  suite stays green.
-- When a fix closes a hole, that test starts passing and Vitest **fails the
+After each attempted write it reads the row back with the service-role client,
+because Postgres row-level security often blocks a write *silently* (0 rows
+changed, no error).
+
+**Known holes.** A rule the database *should* enforce but doesn't yet is
+written as the desired behaviour and marked `knownHole(...)`:
+
+- While the hole is open, the test fails, and Vitest counts an expected failure
+  as a **pass**, so the suite stays green.
+- When a fix closes the hole, the test starts passing and Vitest **fails the
   run** ("expected test to fail"). Change `knownHole` back to `it` in the same
   PR as the fix.
-- The anonymous-sign-in redesign is done when no `knownHole`s are left.
+
+There are **none right now**: anonymous sign-in closed the original nine.
 
 Files:
 - `security.test.js`: the tests, grouped by table and by kind of user.
-- `helpers.js`: test customers (`seedCustomer`), staff sign-in, cleanup, and
-  `knownHole`.
+- `helpers.js`: test customers (`seedCustomer`), customer and staff sign-in,
+  cleanup, and `knownHole`.
 
 ## Smoke tests (`tests/smoke/`)
 
@@ -93,35 +109,45 @@ The browser emulates a Pixel 7.
 - **Customer and staff journey:**
   1. Join.
   2. The QR code shows, and the card is saved under the right shop with 0
-     stamps (database check).
+     stamps and linked to the phone's account (database check).
   3. Edit the name.
   4. Staff stamp the card by typing its code.
   5. The customer's card updates live.
-  6. Staff fill the card and redeem the reward.
-  7. Log out, then rejoin with the same contact to get the same card back.
-  8. Delete the account (database check that the row is gone).
+  6. Log out (still logged out after reopening the app), then log back in:
+     same card, same stamps.
+  7. **New phone:** joining with the same contact (different capitalisation)
+     shows the "already have a card" banner.
+  8. Staff see "Possible earlier card" on the new card and tap **Move it
+     here**. The new phone switches live to the old card and stamps; the old
+     phone no longer has a card.
+  9. Staff fill the card and redeem the reward.
+  10. Delete the account (database check that the row is gone).
 - **Secret staff entrance:** 7 taps on the shop name open the PIN prompt; a
   wrong PIN keeps it open, the right one (bundled `staffPin`) leads to staff
-  sign-in.
+  sign-in, which warns that this device holds a customer card.
+- **Staff on a customer device:** after signing in as staff and leaving staff
+  mode, the customer screens show "Signed in as staff" until staff sign out.
 - **Staff scanner** rejects a code from the other shop.
 
-Staff use a **separate browser context**, like a separate device. In one
-context a staff login would replace the customer's session, just as it would
-on a real phone.
+Each "phone" (customer, new phone, staff device) is a **separate browser
+context** with its own anonymous account or staff login. A device holds one
+login at a time, just like a real phone.
 
 Files:
 - `journey.spec.js`: the tests, as named `test.step`s.
-- `support.js`: staff sign-in, locators for the staff customer list, cleanup.
+- `support.js`: joining as a customer, staff sign-in, locators for the staff
+  customer list, cleanup.
 - `global-setup.js` / `global-teardown.js`: clean up leftovers, create the
-  staff accounts, and pass their credentials to the tests via env vars.
+  staff accounts, pass their credentials to the tests via env vars, and delete
+  the run's anonymous accounts afterwards.
 - `../../playwright.config.js`: the dev servers, shops, device, timeouts.
 
 **Finding elements.** Tests use visible text, placeholders and roles where they
 are unique. Where they aren't (the bottom-nav tabs and the account icon are
 plain clickable `div`s and icons, and "Scan Code" appears twice), the app has
 `data-testid` attributes (`nav-home`, `nav-scan`, …, `open-account`,
-`brand-title`). Keep
-those when moving components around.
+`brand-title`, and `customer-row-<code>` on each staff list row).
+Keep those when moving components around.
 
 **Retries and flaky tests.** Smoke tests retry once. A test that fails and then
 passes is reported as **flaky**, not passed. Treat that as a signal, not noise.

@@ -39,7 +39,8 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ✅ Done | [#6](https://github.com/peritrigkas/hugorewards/pull/6) |
 | Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | [#8](https://github.com/peritrigkas/hugorewards/pull/8) |
 | Staff-logged-in devices can sign customers up (`Staff insert own tenant` policy) | ✅ Applied live 2026-10-29 | [#9](https://github.com/peritrigkas/hugorewards/pull/9) |
-| Database security tests (`npm run test:db`, Vitest against the scratch project as anon / Hugo staff / Daisy staff) | ✅ Done — 26 tests; 9 are `knownHole`s for the anon `customers` policies below | [#12](https://github.com/peritrigkas/hugorewards/pull/12) |
+| Database security tests (`npm run test:db`, Vitest against the scratch project as anon / Hugo staff / Daisy staff) | ✅ Done — 26 tests; 9 were `knownHole`s for the anon `customers` policies, all closed by anonymous sign-in (now 40 tests, none known holes) | [#12](https://github.com/peritrigkas/hugorewards/pull/12) |
+| **Anonymous customer sign-in** (`developent-docs/anon-customers-design.md`, `supabase-anon-customers.sql`): each install gets an anonymous account, cards belong to it (`user_id`), customers see/change only their own card (name + contact), staff "Move card" for new phones, "already have a card?" banner | 🚧 Applied and tested on **scratch** 2026-10-29; live rollout pending (see checklist) | — |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
@@ -65,25 +66,21 @@ Things that are fine while Hugo is the only tenant but break tenant isolation
 (or the new client's app) once there are two. Tick off before the 2nd
 client's app ships.
 
-- [ ] **Ship a Hugo Android build that sends `tenant_id`** (anything built from
-  `master` after [#8](https://github.com/peritrigkas/hugorewards/pull/8)), and
-  wait until most installs have updated — the Play Store build from before #8
-  relies on the trigger below for every signup. 🚧 Version bumped to 1.0.2
-  (versionCode 3) for this release in [#11](https://github.com/peritrigkas/hugorewards/pull/11); sent for
-  Play production review 2026-10-29.
-- [ ] **Drop the temporary `customers_default_tenant` trigger** (commands in
-  `supabase-customers-default-tenant.sql`). While it exists, any insert
-  without `tenant_id` silently lands under `hugo`.
-- [ ] **Scope the anon `customers` policies by tenant.** "Public read",
-  "Public delete" (`anon`) and "Allow public update" (all roles) are all
-  `using (true)` across every tenant, and the update policy has no
-  `with check`, so anyone with an app's anon key can read, edit, delete — or
-  move to another tenant — any shop's customers. (For staff, "Allow public
-  update" is harmless: Postgres also checks updated rows against SELECT
-  policies, so staff still can't touch or move rows outside their tenant.)
-  Needs a design for how an anonymous customer proves which row is theirs.
-  Each hole is a `knownHole` in `tests/db/security.test.js` — done when
-  they all pass as normal tests.
+- [x] ~~**Ship a Hugo Android build that sends `tenant_id`** and wait for
+  installs to update~~ — superseded: 1.0.2 (versionCode 3, [#11](https://github.com/peritrigkas/hugorewards/pull/11),
+  sent for Play review 2026-10-29) stops working once anonymous sign-in goes
+  live, so the release that matters is **1.0.3** (versionCode 4) below.
+- [ ] **Go live with anonymous customer sign-in** — replaces the old
+  "drop the `customers_default_tenant` trigger" and "scope the anon
+  `customers` policies" items; `supabase-anon-customers.sql` does both.
+  Applied and tested on scratch (40 DB + 8 smoke tests, no known holes).
+  Live steps, together: (1) Dashboard → Authentication → enable "Allow
+  anonymous sign-ins" on the live project; (2) delete the test customers;
+  (3) apply `supabase-anon-customers.sql`; (4) release Android 1.0.3. All
+  older app versions stop working at step 3 (agreed: only test data).
+- [ ] **CAPTCHA (Turnstile/hCaptcha) on anonymous sign-in** before real
+  customers — follow-up PR; the per-IP anonymous rate limit is the only
+  protection against scripted account creation until then.
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their
   logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
   `config.loyalty.stampIcon`, and override the cow-themed copy
@@ -123,6 +120,7 @@ section it updates or overrides.
 | 2026-10-29 | Client logos come from `tenants.config.logoUrl` (public `tenant-assets` Storage bucket, PNG/JPEG/WebP ≤1 MB, uploads via Studio only), preloaded before first render with a fallback to the brand's initial; stamp cards use a per-tenant `loyalty.stampIcon` (bean, leaf, scissors, … from the app's existing lucide icon set) on a grid of `stampsForReward` stamps plus a gold "free" reward slot; the home-screen stats use the stamp icon and logo instead of Hugo's ☕/🐮 | Logo changes shouldn't need an app release; the existing `logo.png` stays build-time-only for icon/splash. A per-industry stamp icon is more distinctive than a plain grid and less busy than the client's logo repeated. Hugo keeps the cow card, re-laid out with 9 spots + a 10th "free" spot (it previously had only 9 spots and no reward spot, and the head was clipped) — falls back to the grid if Hugo's stamp count ever changes, and non-Hugo tenants are reset to neutral defaults so the cow never leaks into their app | §2 Brand identity, Epic 1 |
 | 2026-10-29 | Fixed tenant `config` merge: `loyalty`/`colors` overrides now merge key-by-key with the bundled config | PR #6's `Object.assign` replaced those objects wholesale before merging, so a tenant row setting one color or loyalty field would have lost all the others. Latent only — Hugo's row has `config = {}` | §3 Option B |
 | 2026-10-29 | Added database security tests (Vitest, `tests/db/`) that run against the scratch project as anon, Hugo staff and Daisy staff; rules the DB does not enforce yet are written as the desired behaviour and marked `knownHole` (`it.fails`) | The project had no automated tests, and signups were silently broken for five weeks (2026-09-23 to 2026-10-29). Writing the holes as expected failures keeps the suite green today and makes it flag each hole as it gets fixed, so they double as the acceptance test for the anon `customers` redesign. Tests self-provision staff accounts (random password per run) via the service-role key in git-ignored `.env.test.local`, and refuse to run against the live project ref | §3 Option B |
+| 2026-10-29 | Customers prove card ownership with Supabase **anonymous sign-in** (one invisible account per app install, `customers.user_id`); log out only hides the card on that phone; a new phone gets its old card back via staff **Move card** (`move_card`), prompted by an "already have a card?" banner matched on normalized contact; email-code restore and CAPTCHA are follow-ups | The anon key is in every app, so the old "anyone can read/edit/delete any shop's customers" rules could not be scoped without an identity. A password or per-login email check was rejected as too much friction for a loyalty card; the phone is the proof. Rejoin-by-contact was itself a hole (anyone could type someone else's number), so it became a hint for staff instead of a key. Breaking app versions before 1.0.3 is acceptable because every current customer is test data. Full design and decisions: `anon-customers-design.md` | §3 Option B |
 
 ## Deviations from the original strategy doc
 

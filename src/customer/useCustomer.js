@@ -1,58 +1,66 @@
 import { useEffect, useState } from "react";
 import { clientConfig } from "../client.config";
 import {
-  createCustomer, deleteCustomer, findCustomerByContact, getCustomerByCode, subscribeToCustomer,
-  updateCustomerDetails,
+  contactHasOtherCard, createCustomer, deleteCustomer, getMyCustomer, subscribeToMyCustomer, updateCustomerDetails,
 } from "../lib/customers";
+import { ensureCustomerSession, getDeviceSession, isStaffSession } from "../lib/customerAuth";
+import { isLoggedOut, setLoggedOut } from "../lib/loggedOut";
 import { makeCustomerCode } from "../lib/loyalty";
-import { clearSavedCode, getSavedCode, saveCode } from "../lib/savedCode";
+import { signOutStaff } from "../lib/staffAuth";
 
 // The branded loading screen always shows for at least this long on launch.
 const MIN_LOADING_MS = 3000;
 
-// The customer whose card is saved on this device (null if none), kept in
-// sync with the database while the app is open. Actions resolve to true/false
-// so screens can show their own error messages.
+// The card belonging to this device's (anonymous) account, kept in sync with
+// the database while the app is open. Actions resolve to true/false so screens
+// can show their own error messages.
 export function useCustomer() {
   const [customer, setCustomer] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loggedOut, setLoggedOutState] = useState(isLoggedOut);
+  // A staff login on this device would make the customer screens act as staff.
+  const [staffOnDevice, setStaffOnDevice] = useState(false);
+  // Another card in this shop has the same contact: likely this customer's old phone.
+  const [hasEarlierCard, setHasEarlierCard] = useState(false);
 
-  const fetchMe = async (code) => {
-    const data = await getCustomerByCode(code);
-    if (data) setCustomer(data);
+  const refresh = async () => {
+    const card = await getMyCustomer(clientConfig.tenantId);
+    setCustomer(card);
+    setHasEarlierCard(card ? await contactHasOtherCard(clientConfig.tenantId, card.contact) : false);
+  };
+
+  const load = async () => {
+    // No account is created just by opening the app — only on joining.
+    const session = await getDeviceSession();
+    setStaffOnDevice(isStaffSession(session));
+    if (session && !isStaffSession(session)) {
+      setUserId(session.user.id);
+      await refresh();
+    }
   };
 
   useEffect(() => {
-    const savedCode = getSavedCode();
     const minDelay = new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS));
-    if (savedCode) {
-      Promise.all([fetchMe(savedCode), minDelay]).finally(() => setLoading(false));
-    } else {
-      minDelay.then(() => setLoading(false));
-    }
+    Promise.all([load(), minDelay]).finally(() => setLoading(false));
   }, []);
 
+  // Live stamps, and the card staff move onto this phone from an old one.
   useEffect(() => {
-    if (!customer) return;
-    return subscribeToCustomer(customer.code, setCustomer);
-  }, [customer?.code]);
+    if (!userId) return;
+    return subscribeToMyCustomer(userId, refresh);
+  }, [userId]);
 
   const join = async (name, contact) => {
-    // Returning customer: if this contact already has a card, log them back into
-    // it instead of creating a duplicate — fixes losing stamps on logout/rejoin.
-    if (contact) {
-      const existing = await findCustomerByContact(contact);
-      if (existing) {
-        saveCode(existing.code);
-        setCustomer(existing);
-        return true;
-      }
-    }
+    const session = await ensureCustomerSession();
+    if (!session || isStaffSession(session)) return false;
     const code = makeCustomerCode(clientConfig.loyalty.codePrefix);
-    const data = await createCustomer({ name, contact, code, tenantId: clientConfig.tenantId });
+    const data = await createCustomer({ name, contact, code, tenantId: clientConfig.tenantId, userId: session.user.id });
     if (!data) return false;
-    saveCode(code);
+    logBackIn();
+    setUserId(session.user.id);
     setCustomer(data);
+    setHasEarlierCard(await contactHasOtherCard(clientConfig.tenantId, contact));
     return true;
   };
 
@@ -63,9 +71,15 @@ export function useCustomer() {
     return true;
   };
 
+  // Hides the card on this device; the account and card stay for logBackIn.
   const logout = () => {
-    clearSavedCode();
-    setCustomer(null);
+    setLoggedOut(true);
+    setLoggedOutState(true);
+  };
+
+  const logBackIn = () => {
+    setLoggedOut(false);
+    setLoggedOutState(false);
   };
 
   const deleteAccount = async () => {
@@ -73,10 +87,19 @@ export function useCustomer() {
     if (!deleted) {
       return false;
     }
-    clearSavedCode();
     setCustomer(null);
+    setHasEarlierCard(false);
     return true;
   };
 
-  return { customer, loading, join, saveDetails, logout, deleteAccount };
+  const signOutStaffOnDevice = async () => {
+    await signOutStaff();
+    setStaffOnDevice(false);
+    setCustomer(null);
+  };
+
+  return {
+    customer, loading, loggedOut, staffOnDevice, hasEarlierCard,
+    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice,
+  };
 }

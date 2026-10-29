@@ -11,6 +11,17 @@ const RUN = randomBytes(3).toString("hex").toUpperCase();
 let codeCounter = 0;
 export const testCode = () => `${CODE_PREFIX}${RUN}-${++codeCounter}`;
 
+// Anonymous accounts created by this run, deleted in cleanup().
+const customerUserIds = [];
+
+// A customer's phone: a fresh anonymous account, as the app creates on joining.
+export async function signInCustomer() {
+  const client = anonClient();
+  const { user } = must(await client.auth.signInAnonymously());
+  customerUserIds.push(user.id);
+  return { client, userId: user.id };
+}
+
 export async function signInStaff(slug, tenantId) {
   const { email, password, userId } = await ensureStaffAccount("rls-test", slug, tenantId);
   const client = anonClient();
@@ -38,6 +49,9 @@ export async function readCustomerByCode(code) {
 
 export async function cleanup() {
   must(await admin.from("customers").delete().like("code", `${CODE_PREFIX}%`));
+  for (const id of customerUserIds.splice(0)) {
+    must(await admin.auth.admin.deleteUser(id));
+  }
 }
 
 // A rule the database should enforce but currently doesn't. The test asserts

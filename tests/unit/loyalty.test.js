@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { customerCodePattern, isRewardReady, makeCustomerCode, nextStampCount } from "../../src/lib/loyalty.js";
+import {
+  customerCodePattern, findEarlierCards, isRewardReady, makeCustomerCode, nextStampCount, normalizeContact,
+} from "../../src/lib/loyalty.js";
 
 describe("makeCustomerCode", () => {
   it("is the prefix, a dash and 5 uppercase base-36 characters", () => {
@@ -55,5 +57,42 @@ describe("isRewardReady", () => {
   it("is ready only once the card is full", () => {
     expect(isRewardReady(8, 9)).toBe(false);
     expect(isRewardReady(9, 9)).toBe(true);
+  });
+});
+
+describe("normalizeContact", () => {
+  it.each([
+    ["07827 421616", "07827421616"],
+    ["(07827) 421-616", "07827421616"],
+    ["+44 7827.421.616", "+447827421616"],
+    // Dots go too, so "john.smith@" and "johnsmith@" also match — fine for a hint staff confirm.
+    ["  Peri@Example.COM ", "peri@examplecom"],
+  ])("treats %j like %j", (input, expected) => {
+    expect(normalizeContact(input)).toBe(expected);
+  });
+
+  it("treats a missing contact as empty", () => {
+    expect(normalizeContact(null)).toBe("");
+  });
+});
+
+describe("findEarlierCards", () => {
+  const card = (id, contact, created_at) => ({ id, contact, created_at });
+
+  it("links a newer card to the oldest card with the same contact", () => {
+    const old = card("old", "07827 421616", "2026-10-01T10:00:00Z");
+    const mid = card("mid", "07827421616", "2026-10-15T10:00:00Z");
+    const fresh = card("new", "(07827) 421616", "2026-10-29T10:00:00Z");
+    expect(findEarlierCards([fresh, old, mid])).toEqual({ mid: old, new: old });
+  });
+
+  it("ignores cards without a contact and cards with different contacts", () => {
+    const cards = [
+      card("a", "", "2026-10-01T10:00:00Z"),
+      card("b", "", "2026-10-02T10:00:00Z"),
+      card("c", "peri@example.com", "2026-10-03T10:00:00Z"),
+      card("d", "nani@example.com", "2026-10-04T10:00:00Z"),
+    ];
+    expect(findEarlierCards(cards)).toEqual({});
   });
 });
