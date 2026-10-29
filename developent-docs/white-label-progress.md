@@ -21,7 +21,7 @@ regardless of which backend architecture (A or B) is chosen.
 |---|---|---|
 | Content/copy extraction (brand name, taglines, menu, location, loyalty rules) into `src/client.config.js` | ✅ Done | [#1](https://github.com/peritrigkas/hugorewards/pull/1) |
 | CSS-variable color theming (`--c-*` custom properties sourced from `client.config.js`) | ✅ Done | [#2](https://github.com/peritrigkas/hugorewards/pull/2) |
-| Mascot/logo artwork swap-per-client | ⏳ Not started | — |
+| Mascot/logo artwork swap-per-client — `logoUrl` (public `tenant-assets` bucket) + `loyalty.stampIcon` stamp-card icons; Hugo keeps the cow | ✅ Done | PR pending |
 | Config schema/validation (TS type or JSON schema) | ⏳ Not started | — |
 
 ## Epic 2: Multi-tenant backend (Option B)
@@ -79,8 +79,12 @@ client's app ships.
   applies to `authenticated`, so it overrides "Staff update own tenant"
   (permissive policies OR together — see the 2026-09-17 decision). Needs a
   design for how an anonymous customer proves which row is theirs.
-- [ ] **Per-client mascot/logo artwork** (Epic 1) — otherwise the new
-  client's app shows Hugo's cow.
+- [ ] **Set the new client's artwork in their `tenants` row** — upload their
+  logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
+  `config.loyalty.stampIcon`, and override the cow-themed copy
+  (`joinTagline`, `greetingSubtitle`, `loadingMessage`, `howToEarn`,
+  `loyalty.earnCardBody`, `loyalty.cardsPromoBody`, ...),
+  which they otherwise inherit from Hugo's bundled config.
 - [ ] **First non-Hugo Android build on a Mac** — icon/splash generation is
   still untested end-to-end (checklist in `clients/README.md`).
 
@@ -111,6 +115,8 @@ section it updates or overrides.
 | 2026-10-29 | The committed `android/` + `capacitor.config.json` are the baseline (Hugo) identity: `build-client` refuses to start unless they're clean, restores them from git if any step fails, and `npm run reset-client` restores them after a client build. The tenant slug goes to the web build as a process env var, not into `.env.local` | Review of #7 found switching back to Hugo was impossible (no Hugo `logo.png`), `.env.local` silently kept the last client's tenant for later Hugo builds, and a failed build left `android/` half-switched and easy to commit. Git already holds the baseline, so restoring from it is simpler than snapshotting | Epic 3 |
 | 2026-10-29 | Added a `Staff insert own tenant` INSERT policy on `customers` for `authenticated`, scoped by `private.current_staff_tenant_id()` (`supabase-customers-staff-insert.sql`) | A phone signup test failed with an RLS violation: supabase-js keeps the staff login on any device used for the owner dashboard, so customer signups there run as `authenticated`, which had no INSERT policy after the tenants migration (only `anon` did). Scoping by staff tenant matches the existing staff read/update policies, so it's a permanent policy, not a stopgap | §3 Option B |
 | 2026-10-29 | Kept the `Staff insert own tenant` policy permanently rather than removing it after testing; added a "Before onboarding a 2nd client" checklist | Staff inserts are scoped to their own tenant, which is narrower than what `anon` can already do on `customers`, so the policy adds no real exposure — removing it would just re-break signups on staff devices. The actual cross-tenant exposure is the existing anon read/update/delete policies, now tracked on the checklist | §3 Option B |
+| 2026-10-29 | Client logos come from `tenants.config.logoUrl` (public `tenant-assets` Storage bucket, PNG/JPEG/WebP ≤1 MB, uploads via Studio only), preloaded before first render with a fallback to the brand's initial; stamp cards use a per-tenant `loyalty.stampIcon` (bean, leaf, scissors, … from the app's existing lucide icon set) on a grid of `stampsForReward` stamps plus a gold "free" reward slot; the home-screen stats use the stamp icon and logo instead of Hugo's ☕/🐮 | Logo changes shouldn't need an app release; the existing `logo.png` stays build-time-only for icon/splash. A per-industry stamp icon is more distinctive than a plain grid and less busy than the client's logo repeated. Hugo keeps the cow card, re-laid out with 9 spots + a 10th "free" spot (it previously had only 9 spots and no reward spot, and the head was clipped) — falls back to the grid if Hugo's stamp count ever changes, and non-Hugo tenants are reset to neutral defaults so the cow never leaks into their app | §2 Brand identity, Epic 1 |
+| 2026-10-29 | Fixed tenant `config` merge: `loyalty`/`colors` overrides now merge key-by-key with the bundled config | PR #6's `Object.assign` replaced those objects wholesale before merging, so a tenant row setting one color or loyalty field would have lost all the others. Latent only — Hugo's row has `config = {}` | §3 Option B |
 
 ## Deviations from the original strategy doc
 

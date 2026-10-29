@@ -1,10 +1,17 @@
-// Per-client content, copy, and palette. The cow mascot artwork and the QR
-// canvas stay hardcoded in App.jsx for now — swapping those per client is a
-// separate asset-swap pass (see developent-docs/white-label-strategy.md).
+// Per-client content, copy, palette, and artwork choices. A tenant's row in
+// the `tenants` table overrides these at startup (see src/tenantConfig.js).
 export const clientConfig = {
   id: "hugo",
   brandName: "Hugo",
   fullBrandName: "Hugo Rewards",
+
+  // Brand mark shown across the app (join screen, home, loading, ...). A
+  // tenant sets logoUrl to an image in the public `tenant-assets` Storage
+  // bucket; without one, "cow" draws Hugo's built-in mascot and anything else
+  // draws the brand's initial in a circle. tenantConfig.js resets both for
+  // non-Hugo tenants so Hugo's cow never leaks into another client's app.
+  logoUrl: null,
+  mark: "cow",
 
   // Applied as CSS custom properties (--c-<key>) at the app root — every
   // color used outside the mascot/QR artwork reads from these.
@@ -34,6 +41,12 @@ export const clientConfig = {
     stampsForReward: 9,
     codePrefix: "HUGO",
     earnCardBody: "Buy 9, the 10th's on the cow.",
+    cardsPromoBody: "Get a stamp on your Hugo card for every coffee — buy 9, and the 10th's on the cow.",
+    // Icon on each stamp of the loyalty card: "cow" (Hugo's cow card, 9-stamp
+    // cards only) or one of bean, coffee, croissant, cookie, ice-cream, leaf,
+    // flower, scissors, dumbbell, paw, heart, star — see STAMP_ICONS in App.jsx.
+    // Anything else draws plain filled circles.
+    stampIcon: "cow",
     progressLabel: (n) => `Collect ${n} stamps for a free coffee`,
   },
 

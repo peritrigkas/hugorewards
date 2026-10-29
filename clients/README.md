@@ -22,6 +22,13 @@ Then:
 1. Add `clients/<slug>/logo.png`.
 2. Create the client's row in the `tenants` table (Supabase Studio) with a
    matching `slug` — see `supabase-schema-tenants.sql`.
+   Its `config` (jsonb) overrides `src/client.config.js` at runtime. For
+   artwork: upload the in-app logo to the `tenant-assets` Storage bucket
+   (PNG/JPEG/WebP, ≤1 MB) and set `"logoUrl"` to its public URL, and pick a
+   stamp icon, e.g.
+   `{"logoUrl": "https://<ref>.supabase.co/storage/v1/object/public/tenant-assets/daisy/logo.png", "loyalty": {"stampIcon": "leaf", "cardsPromoBody": "..."}}`.
+   Preview locally with `npm run dev` and
+   `?stampIcon=leaf&stampsForReward=8&logoUrl=<url>`.
 3. `npm run build-client -- <slug>`
 
 `build-client` rewrites `capacitor.config.json` and the shared `android/`
