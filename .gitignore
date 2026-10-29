@@ -36,3 +36,7 @@ android/.idea/
 *.keystore
 *.apk
 *.aab
+
+# Playwright
+test-results/
+playwright-report/

@@ -41,7 +41,7 @@ column as each step's PR merges.
 | # | Step | Scope | Done when | Status | PR |
 |---|---|---|---|---|---|
 | 0 | Loading screen 5s → 3s | One-line change to `CustomerApp`'s minimum loading delay | — | ✅ Done | [#13](https://github.com/peritrigkas/hugorewards/pull/13) |
-| 1 | **Smoke tests** | Playwright against the scratch project, Hugo and Daisy. Customer: sign up → card + QR → edit details → log out / rejoin → delete. Staff: log in → stamp by code → reward → reset. `npm test` runs unit + DB + smoke | Green against today's code | 🚧 In progress | — |
+| 1 | **Smoke tests** | Playwright (`npm run test:smoke`, `tests/smoke/`) against the scratch project, Hugo and Daisy. Customer: sign up → QR + card saved under the right shop → edit name → live stamp update → log out / rejoin → delete. Staff (separate browser context): log in → stamp by code → fill card → redeem; scanner rejects another shop's code. `npm test` runs DB + smoke (unit tests join in step 2) | Green against today's code | ✅ Done — 4 tests, ~30s | — |
 | 2 | **Data layer** | Every Supabase call moves to `src/lib/customers.js` / `src/lib/staffAuth.js`; pure logic (`makeCode`, stamp/reward maths, code regex) to `src/lib/loyalty.js` with unit tests | Tests green; no `supabase.` calls left in components | ⏳ Not started | — |
 | 3 | **Split components** | Pure move into `src/components/` (CowMark, BrandMark, stamp cards, QR, TopBar, nav), `src/customer/screens/` (Join, Home, Visit, Account, Menu, …), `src/owner/` (OwnerApp, StaffLogin, PinPrompt, ScanPanel). `App.jsx` becomes a ~15-line customer/owner switch | Tests green; no file over ~250 lines | ⏳ Not started | — |
 | 4 | **State hooks** | `useCustomer()` (saved code, load, realtime, join/edit/delete) and `useOwnerCustomers()` (session, list, realtime, stamp/reset); screens become presentational | Tests green | ⏳ Not started | — |
@@ -51,6 +51,14 @@ column as each step's PR merges.
 After step 4, the anon-customer redesign should mostly touch
 `src/lib/customers.js` and `useCustomer()`, and is done when the 9
 `knownHole`s in `tests/db/security.test.js` pass as normal tests.
+
+## Bugs found along the way
+
+Not fixed inside the refactor steps (ground rules) — each gets its own PR.
+
+| Found | Bug | Evidence | Status |
+|---|---|---|---|
+| 2026-10-29, step 1 | **Customer card occasionally misses a live stamp update.** The `customer-<code>` realtime channel in `CustomerApp` calls `.subscribe()` with no status callback, so a failed or dropped subscription is never noticed or retried; the card only catches up when reopened | Smoke test "customer's card updates live" failed once in 8 runs (Hugo, first run with both dev servers cold): the page still showed `0/9` 15s after staff added a stamp. Root cause unconfirmed — the trace was overwritten by the next run. Smoke tests use `retries: 1` so a recurrence shows up as **flaky** rather than failing at random | ⏳ Open |
 
 ## Decisions
 
