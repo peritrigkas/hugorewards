@@ -37,7 +37,7 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | RLS policies scoped by `tenant_id` | ✅ Applied live — security advisor clean (no new findings) | [#4](https://github.com/peritrigkas/hugorewards/pull/4), [#5](https://github.com/peritrigkas/hugorewards/pull/5) |
 | Staff auth → tenant mapping (`staff_tenant` table) | ✅ Applied live — `staff@hugocoffee.com` mapped to the `hugo` tenant | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ✅ Done | [#6](https://github.com/peritrigkas/hugorewards/pull/6) |
-| Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | PR pending |
+| Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | [#8](https://github.com/peritrigkas/hugorewards/pull/8) |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
