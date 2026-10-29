@@ -67,7 +67,8 @@ client's app ships.
 - [ ] **Ship a Hugo Android build that sends `tenant_id`** (anything built from
   `master` after [#8](https://github.com/peritrigkas/hugorewards/pull/8)), and
   wait until most installs have updated — the Play Store build from before #8
-  relies on the trigger below for every signup.
+  relies on the trigger below for every signup. 🚧 Version bumped to 1.0.2
+  (versionCode 3) for this release; not yet uploaded to Play.
 - [ ] **Drop the temporary `customers_default_tenant` trigger** (commands in
   `supabase-customers-default-tenant.sql`). While it exists, any insert
   without `tenant_id` silently lands under `hugo`.
