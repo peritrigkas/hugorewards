@@ -38,7 +38,7 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | Staff auth → tenant mapping (`staff_tenant` table) | ✅ Applied live — `staff@hugocoffee.com` mapped to the `hugo` tenant | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ✅ Done | [#6](https://github.com/peritrigkas/hugorewards/pull/6) |
 | Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | [#8](https://github.com/peritrigkas/hugorewards/pull/8) |
-| Staff-logged-in devices can sign customers up (`Staff insert own tenant` policy) | ✅ Applied live 2026-10-29 | PR pending |
+| Staff-logged-in devices can sign customers up (`Staff insert own tenant` policy) | ✅ Applied live 2026-10-29 | [#9](https://github.com/peritrigkas/hugorewards/pull/9) |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
