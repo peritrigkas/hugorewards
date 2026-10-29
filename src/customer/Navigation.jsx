@@ -13,6 +13,7 @@ export function TopBar({ onBack, onMenu, onSecretTap, onAccount }) {
         <Menu color="var(--c-cream)" size={24} onClick={onMenu} style={{ cursor: "pointer" }} />
       )}
       <div
+        data-testid="brand-title"
         onClick={onSecretTap}
         style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 26, color: "var(--c-cream)", userSelect: "none" }}
       >

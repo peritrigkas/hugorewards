@@ -3,6 +3,7 @@
 // These guard the App.jsx refactor (developent-docs/refactor-plan.md).
 import { expect, test } from "@playwright/test";
 import { randomBytes } from "node:crypto";
+import { clientConfig } from "../../src/client.config.js";
 import { admin, must } from "../support/scratch.js";
 import { signInAsStaff, staffRowButton, staffStampLine } from "./support.js";
 
@@ -92,6 +93,27 @@ test("customer joins, gets stamped, redeems, edits, rejoins and deletes", async 
     await expect(page.getByPlaceholder("Your name")).toBeVisible();
     expect(must(await admin.from("customers").select("id").eq("code", code))).toEqual([]);
   });
+});
+
+test("seven taps on the shop name open the staff PIN, which leads to staff sign-in", async ({ page }, testInfo) => {
+  await page.goto("/");
+  await page.getByPlaceholder("Your name").fill("Smoke Tapper");
+  await page.getByPlaceholder("Phone or email").fill(`smoke-${randomBytes(3).toString("hex")}-${testInfo.project.name}@test.local`);
+  await page.getByRole("button", { name: /^Join / }).click();
+
+  const title = page.getByTestId("brand-title");
+  for (let i = 0; i < 6; i++) await title.click();
+  await expect(page.getByText("Staff access")).toBeHidden();
+  await title.click();
+  await expect(page.getByText("Staff access")).toBeVisible();
+
+  const pin = page.locator('input[type="password"]');
+  await pin.fill("0000");
+  await pin.press("Enter");
+  await expect(page.getByText("Staff access")).toBeVisible();
+  await pin.fill(clientConfig.staffPin);
+  await pin.press("Enter");
+  await expect(page.getByText("Staff sign in")).toBeVisible();
 });
 
 test("staff scanner rejects another shop's code", async ({ page }, testInfo) => {
