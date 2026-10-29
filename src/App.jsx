@@ -3,6 +3,7 @@ import qrcode from "qrcode-generator";
 import {
   Menu, User, Home, Star, QrCode, UtensilsCrossed, MapPin,
   ChevronRight, ChevronLeft, Gift, X, Instagram, Facebook, Music2,
+  Bean, Coffee, Croissant, Cookie, IceCreamCone, Leaf, Flower2, Scissors, Dumbbell, PawPrint, Heart,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { Capacitor } from "@capacitor/core";
@@ -48,16 +49,70 @@ function CowMark({ size = 40, style }) {
   );
 }
 
+// One spot per stamp, filled left to right, all clear of the body outline and
+// the head; COW_FREE_SPOT is the extra "10th's on the cow" reward spot.
 const COW_SPOTS = [
-  { cx: 28, cy: 36, r: 12 }, { cx: 56, cy: 30, r: 9 }, { cx: 78, cy: 42, r: 11 },
-  { cx: 40, cy: 58, r: 10 }, { cx: 66, cy: 62, r: 8 }, { cx: 95, cy: 60, r: 9 },
-  { cx: 18, cy: 62, r: 7 }, { cx: 90, cy: 24, r: 7 }, { cx: 108, cy: 44, r: 10 },
+  { cx: 18, cy: 60, r: 7 }, { cx: 25, cy: 40, r: 9 }, { cx: 40, cy: 60, r: 10 },
+  { cx: 48, cy: 30, r: 8 }, { cx: 58, cy: 74, r: 6 }, { cx: 64, cy: 52, r: 8 },
+  { cx: 72, cy: 28, r: 9 }, { cx: 86, cy: 60, r: 9 }, { cx: 96, cy: 36, r: 8 },
 ];
+const COW_FREE_SPOT = { cx: 108, cy: 58, r: 8 };
+
+// The tenant's logo, Hugo's built-in cow, or (for a tenant with neither)
+// their initial in a circle — see logoUrl/mark in client.config.js. Inline
+// like the cow SVG it replaces, so callers' centering keeps working.
+function BrandMark({ size = 40, style }) {
+  const [failed, setFailed] = useState(false);
+  if (clientConfig.logoUrl && !failed) {
+    return (
+      <img src={clientConfig.logoUrl} alt={clientConfig.brandName} width={size} height={size} onError={() => setFailed(true)}
+        style={{ display: "inline-block", verticalAlign: "middle", objectFit: "contain", ...style }} />
+    );
+  }
+  if (clientConfig.mark === "cow") return <CowMark size={size} style={style} />;
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: "var(--c-dark)", color: "var(--c-cream)", display: "inline-flex", verticalAlign: "middle", alignItems: "center", justifyContent: "center", fontFamily: "Baloo 2, sans-serif", fontWeight: 700, fontSize: size * 0.5, lineHeight: 1, ...style }}>
+      {clientConfig.brandName.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+// Choices for loyalty.stampIcon (see client.config.js).
+const STAMP_ICONS = {
+  bean: Bean, coffee: Coffee, croissant: Croissant, cookie: Cookie, "ice-cream": IceCreamCone,
+  leaf: Leaf, flower: Flower2, scissors: Scissors, dumbbell: Dumbbell, paw: PawPrint, heart: Heart, star: Star,
+};
+
+function StampCard({ stamps }) {
+  const iconName = clientConfig.loyalty.stampIcon;
+  // The cow card has exactly one spot per stamp, so it only fits that many.
+  if (iconName === "cow" && STAMPS_FOR_REWARD === COW_SPOTS.length) return <CowStampCard stamps={stamps} />;
+  const Icon = STAMP_ICONS[iconName];
+  const isComplete = stamps >= STAMPS_FOR_REWARD;
+  const slot = { width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box" };
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, maxWidth: 300, margin: "0 auto" }}>
+      {Array.from({ length: STAMPS_FOR_REWARD }, (_, i) => {
+        const filled = i < stamps;
+        return (
+          <div key={i} style={{ ...slot, background: filled ? "var(--c-dark)" : "var(--c-cream)", border: filled ? "2px solid var(--c-dark)" : "2px dashed var(--c-divider)", color: filled ? "var(--c-cream)" : "var(--c-inactive)" }}>
+            {Icon && <Icon size={24} strokeWidth={2} />}
+          </div>
+        );
+      })}
+      {/* The reward itself — "buy N, the next one's free". */}
+      <div style={{ ...slot, background: isComplete ? "var(--c-gold)" : "var(--c-cream)", border: isComplete ? "2px solid var(--c-gold)" : "2px dashed var(--c-gold)", color: "var(--c-dark)" }}>
+        {isComplete ? <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13 }}>free!</span> : <Gift size={22} strokeWidth={2} color="var(--c-gold)" />}
+      </div>
+    </div>
+  );
+}
 
 function CowStampCard({ stamps }) {
   const isComplete = stamps >= STAMPS_FOR_REWARD;
+  const free = COW_FREE_SPOT;
   return (
-    <svg width="100%" viewBox="-10 0 150 90" style={{ maxWidth: 320, display: "block", margin: "0 auto" }}>
+    <svg width="100%" viewBox="-2 -4 160 100" style={{ maxWidth: 320, display: "block", margin: "0 auto" }}>
       <ellipse cx="65" cy="50" rx="60" ry="34" fill="#F6EEDF" stroke="#1A1420" strokeWidth="3" />
       <circle cx="130" cy="34" r="20" fill="#F6EEDF" stroke="#1A1420" strokeWidth="3" />
       <path d="M117 16 L108 -2 L126 10 Z" fill="#1A1420" />
@@ -70,17 +125,12 @@ function CowStampCard({ stamps }) {
       ))}
       {COW_SPOTS.map((s, i) => {
         const filled = i < stamps;
-        return (
-          <g key={i}>
-            <circle cx={s.cx} cy={s.cy} r={s.r} fill={filled ? "#1A1420" : "#F6EEDF"} stroke="#1A1420" strokeWidth={filled ? 0 : 2} />
-            {i === COW_SPOTS.length - 1 && isComplete && (
-              <text x={s.cx} y={s.cy + 3} textAnchor="middle" fontSize="6.5" fill="#F6EEDF" fontFamily="Inter, sans-serif" fontWeight="700">
-                free!
-              </text>
-            )}
-          </g>
-        );
+        return <circle key={i} cx={s.cx} cy={s.cy} r={s.r} fill={filled ? "#1A1420" : "#F6EEDF"} stroke="#1A1420" strokeWidth={filled ? 0 : 2} />;
       })}
+      <circle cx={free.cx} cy={free.cy} r={free.r} fill={isComplete ? clientConfig.colors.gold : "#F6EEDF"} stroke={clientConfig.colors.gold} strokeWidth="2" strokeDasharray={isComplete ? undefined : "3 2"} />
+      <text x={free.cx} y={free.cy + 2.2} textAnchor="middle" fontSize="6" fill="#1A1420" fontFamily="Inter, sans-serif" fontWeight="700">
+        {isComplete ? "free!" : "free"}
+      </text>
     </svg>
   );
 }
@@ -100,7 +150,7 @@ function QrCanvas({ value, size = 200 }) {
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = "#1A1420";
+    ctx.fillStyle = clientConfig.colors.dark;
     for (let row = 0; row < count; row++) {
       for (let col = 0; col < count; col++) {
         if (qr.isDark(row, col)) ctx.fillRect(col * cellSize, row * cellSize, cellSize + 0.5, cellSize + 0.5);
@@ -196,7 +246,7 @@ function JoinScreen({ onJoin }) {
   return (
     <div style={{ background: "var(--c-cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 360, width: "100%", textAlign: "center" }}>
-        <CowMark size={72} style={{ margin: "0 auto 16px" }} />
+        <BrandMark size={72} style={{ margin: "0 auto 16px" }} />
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 30, color: "var(--c-dark)", marginBottom: 6 }}>{clientConfig.brandName}</div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-muted)", marginBottom: 24 }}>
           {clientConfig.joinTagline}
@@ -225,6 +275,9 @@ function JoinScreen({ onJoin }) {
   );
 }
 
+// Hugo keeps its ☕ / 🐮 emoji; other tenants get their stamp icon and logo.
+const StatStampIcon = clientConfig.loyalty.stampIcon === "cow" ? null : STAMP_ICONS[clientConfig.loyalty.stampIcon] || Star;
+
 function StatBlock({ value, label, emoji }) {
   return (
     <div style={{ textAlign: "center", flex: 1 }}>
@@ -245,11 +298,11 @@ function Greeting({ customer }) {
         {clientConfig.greetingSubtitle}
       </div>
       <div style={{ display: "flex" }}>
-        <StatBlock value={customer.stamps} label="Stamps" emoji="☕" />
+        <StatBlock value={customer.stamps} label="Stamps" emoji={StatStampIcon ? <StatStampIcon size={20} color="var(--c-dark)" /> : "☕"} />
         <div style={{ width: 1, background: "var(--c-divider)" }} />
         <StatBlock value="0" label="Gift List" emoji="🎁" />
         <div style={{ width: 1, background: "var(--c-divider)" }} />
-        <StatBlock value="1" label="Cards" emoji="🐮" />
+        <StatBlock value="1" label="Cards" emoji={clientConfig.mark === "cow" && !clientConfig.logoUrl ? "🐮" : <BrandMark size={22} />} />
       </div>
     </div>
   );
@@ -258,7 +311,7 @@ function Greeting({ customer }) {
 function HeroBanner() {
   return (
     <div style={{ margin: "0 0 24px", background: "linear-gradient(160deg, var(--c-lilac) 0%, var(--c-purple) 100%)", padding: "50px 24px", textAlign: "center" }}>
-      <CowMark size={90} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
+      <BrandMark size={90} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 40, color: "var(--c-dark)", lineHeight: 1.05 }}>
         {clientConfig.hero.titleLines.map((line, i) => (
           <React.Fragment key={i}>
@@ -291,7 +344,7 @@ function EarnRewardsCard({ onView }) {
     <div style={{ padding: "0 20px", marginBottom: 32 }}>
       <div onClick={onView} style={{ background: "linear-gradient(160deg, var(--c-lilac) 0%, var(--c-purple) 100%)", borderRadius: 20, padding: "32px 24px", textAlign: "center", position: "relative", overflow: "hidden", cursor: "pointer" }}>
         <div style={{ position: "absolute", top: -14, right: -14, opacity: 0.2 }}>
-          <CowMark size={140} />
+          <BrandMark size={140} />
         </div>
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 26, color: "var(--c-dark)", marginBottom: 10, position: "relative" }}>Earn Rewards</div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-darkAlt)", marginBottom: 22, position: "relative" }}>{clientConfig.loyalty.earnCardBody}</div>
@@ -312,7 +365,7 @@ function MenuStrip() {
         {items.map((item) => (
           <div key={item.name} style={{ flex: 1, textAlign: "center" }}>
             <div style={{ background: item.bg, borderRadius: 16, border: "2px solid var(--c-dark)", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-              <CowMark size={44} />
+              <BrandMark size={44} />
             </div>
             <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: "var(--c-dark)" }}>{item.name}</div>
             <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: "var(--c-muted)" }}>{item.tag}</div>
@@ -337,7 +390,7 @@ function ProgressSection({ customer }) {
               <div style={{ height: "100%", width: `${pct}%`, background: "var(--c-gold)", borderRadius: 999, transition: "width 0.3s ease" }} />
             </div>
             <div style={{ position: "absolute", right: -6, top: -14 }}>
-              <CowMark size={30} />
+              <BrandMark size={30} />
             </div>
           </div>
         </div>
@@ -416,7 +469,7 @@ function RewardsHome({ goToCards, goToGifts }) {
     <div style={{ paddingBottom: 100 }}>
       <RewardsHero />
       <div style={{ height: 20 }} />
-      <PromoCard title="MY LOYALTY CARDS" body={`Get a stamp on your ${clientConfig.brandName} card for every coffee — buy 9, and the 10th's on the cow.`} cta="VIEW CARDS" bg="var(--c-dark)" color="var(--c-cream)" onClick={goToCards} />
+      <PromoCard title="MY LOYALTY CARDS" body={clientConfig.loyalty.cardsPromoBody} cta="VIEW CARDS" bg="var(--c-dark)" color="var(--c-cream)" onClick={goToCards} />
       <PromoCard title="MY GIFTS" body="Check what's waiting for you — like a free coffee on your birthday." cta="VIEW GIFT LIST" bg="var(--c-gold)" color="var(--c-dark)" onClick={goToGifts} />
       <HowToEarn />
     </div>
@@ -438,7 +491,7 @@ function LoyaltyCardDetail({ customer }) {
         <div style={{ padding: "24px 20px" }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid var(--c-border)", boxShadow: "0 8px 24px rgba(26,20,32,0.08)" }}>
             <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", marginBottom: 16 }}>{clientConfig.brandName} Loyalty Card</div>
-            <CowStampCard stamps={customer.stamps} />
+            <StampCard stamps={customer.stamps} />
             <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)", marginTop: 12 }}>Code: {customer.code}</div>
           </div>
         </div>
@@ -489,7 +542,7 @@ function ScanCodeScreen({ customer }) {
           <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: 1, color: "var(--c-gold)", marginTop: 16 }}>{customer.code}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 24, padding: "0 4px" }}>
-          <CowMark size={32} />
+          <BrandMark size={32} />
           <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-muted)", lineHeight: 1.5 }}>
             Your code stays the same — no need to screenshot it, just open this screen at the counter.
           </div>
@@ -517,7 +570,7 @@ function MenuScreen() {
           </div>
         ))}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, padding: "16px 4px 0", borderTop: "1px solid var(--c-border)" }}>
-          <CowMark size={30} />
+          <BrandMark size={30} />
           <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-faint)", lineHeight: 1.5 }}>
             {clientConfig.menu.footerNote}
           </div>
@@ -535,7 +588,7 @@ function VisitScreen() {
       </div>
       <div style={{ padding: "28px 20px" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-          <CowMark size={70} />
+          <BrandMark size={70} />
         </div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "var(--c-dark)", textAlign: "center", lineHeight: 1.6, marginBottom: 28 }}>
           {clientConfig.location.intro}
@@ -934,7 +987,7 @@ function StaffLogin({ onLoggedIn }) {
   return (
     <div style={{ background: "var(--c-cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 340, width: "100%", textAlign: "center" }}>
-        <CowMark size={64} style={{ margin: "0 auto 14px" }} />
+        <BrandMark size={64} style={{ margin: "0 auto 14px" }} />
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 24, color: "var(--c-dark)", marginBottom: 4 }}>Staff sign in</div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 22 }}>Sign in with your staff account to add stamps.</div>
         <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -1069,7 +1122,7 @@ function LoadingScreen() {
         }
       `}</style>
       <div style={{ animation: "moo-bounce 1.8s ease-in-out infinite" }}>
-        <CowMark size={110} />
+        <BrandMark size={110} />
       </div>
       <div
         style={{
@@ -1124,7 +1177,7 @@ function PinPrompt({ onSubmit, onCancel }) {
         }
       `}</style>
       <div style={{ background: "var(--c-cream)", borderRadius: 20, padding: "28px 24px", maxWidth: 320, width: "100%", textAlign: "center", animation: error ? "pin-shake 0.3s ease" : "none" }}>
-        <CowMark size={56} style={{ margin: "0 auto 14px" }} />
+        <BrandMark size={56} style={{ margin: "0 auto 14px" }} />
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", marginBottom: 6 }}>Staff access</div>
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 18 }}>Enter the staff PIN to continue</div>
         <input
