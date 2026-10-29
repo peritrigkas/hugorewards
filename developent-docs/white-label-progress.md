@@ -40,7 +40,7 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | [#8](https://github.com/peritrigkas/hugorewards/pull/8) |
 | Staff-logged-in devices can sign customers up (`Staff insert own tenant` policy) | ✅ Applied live 2026-10-29 | [#9](https://github.com/peritrigkas/hugorewards/pull/9) |
 | Database security tests (`npm run test:db`, Vitest against the scratch project as anon / Hugo staff / Daisy staff) | ✅ Done — 26 tests; 9 were `knownHole`s for the anon `customers` policies, all closed by anonymous sign-in (now 40 tests, none known holes) | [#12](https://github.com/peritrigkas/hugorewards/pull/12) |
-| **Anonymous customer sign-in** (`developent-docs/anon-customers-design.md`, `supabase-anon-customers.sql`): each install gets an anonymous account, cards belong to it (`user_id`), customers see/change only their own card (name + contact), staff "Move card" for new phones, "already have a card?" banner | 🚧 Applied and tested on **scratch** 2026-10-29; live rollout pending (see checklist) | — |
+| **Anonymous customer sign-in** (`developent-docs/anon-customers-design.md`, `supabase-anon-customers.sql`): each install gets an anonymous account, cards belong to it (`user_id`), customers see/change only their own card (name + contact), staff "Move card" for new phones, "already have a card?" banner | 🚧 Applied and tested on **scratch** 2026-10-29; live rollout pending (see checklist) | [#18](https://github.com/peritrigkas/hugorewards/pull/18) |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
