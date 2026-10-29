@@ -38,6 +38,7 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | Staff auth → tenant mapping (`staff_tenant` table) | ✅ Applied live — `staff@hugocoffee.com` mapped to the `hugo` tenant | [#4](https://github.com/peritrigkas/hugorewards/pull/4) |
 | Tenant resolution in frontend (fetch config from DB row instead of static file) | ✅ Done | [#6](https://github.com/peritrigkas/hugorewards/pull/6) |
 | Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | [#8](https://github.com/peritrigkas/hugorewards/pull/8) |
+| Staff-logged-in devices can sign customers up (`Staff insert own tenant` policy) | ✅ Applied live 2026-10-29 | [#9](https://github.com/peritrigkas/hugorewards/pull/9) |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
@@ -56,6 +57,32 @@ home-screen icon/name.
 | iOS CI (GitHub Actions/Codemagic) | ⏸️ Deferred until 2nd client confirms it's worth automating | — |
 
 ---
+
+## Before onboarding a 2nd client
+
+Things that are fine while Hugo is the only tenant but break tenant isolation
+(or the new client's app) once there are two. Tick off before the 2nd
+client's app ships.
+
+- [ ] **Ship a Hugo Android build that sends `tenant_id`** (anything built from
+  `master` after [#8](https://github.com/peritrigkas/hugorewards/pull/8)), and
+  wait until most installs have updated — the Play Store build from before #8
+  relies on the trigger below for every signup.
+- [ ] **Drop the temporary `customers_default_tenant` trigger** (commands in
+  `supabase-customers-default-tenant.sql`). While it exists, any insert
+  without `tenant_id` silently lands under `hugo`.
+- [ ] **Scope the anon `customers` policies by tenant.** "Public read",
+  "Public delete" (`anon`) and "Allow public update" (all roles) are all
+  `using (true)` across every tenant, and the update policy has no
+  `with check`, so anyone with an app's anon key can read, edit, delete — or
+  move to another tenant — any shop's customers. "Allow public update" also
+  applies to `authenticated`, so it overrides "Staff update own tenant"
+  (permissive policies OR together — see the 2026-09-17 decision). Needs a
+  design for how an anonymous customer proves which row is theirs.
+- [ ] **Per-client mascot/logo artwork** (Epic 1) — otherwise the new
+  client's app shows Hugo's cow.
+- [ ] **First non-Hugo Android build on a Mac** — icon/splash generation is
+  still untested end-to-end (checklist in `clients/README.md`).
 
 ## Decisions log
 
@@ -82,6 +109,8 @@ section it updates or overrides.
 | 2026-09-23 | Client logo intake uses `@capacitor/assets` "Easy Mode" (single `logo.png` + a background color) instead of Custom Mode (5 separately-sized layer images) | Clients are non-technical business owners — asking for one square logo file is realistic, asking for pre-cut icon-foreground/background/splash layers is not | §2 Brand identity, Epic 3 |
 | 2026-10-29 | Added a temporary `customers_default_tenant` trigger on the live Hugo project (`supabase-customers-default-tenant.sql`) that fills `tenant_id` with the `hugo` tenant when omitted, and made the signup insert send `clientConfig.tenantId` | The tenants migration made `customers.tenant_id` NOT NULL with no default, but PR #6's signup insert never sent it — zero signups landed between 2026-09-23 and 2026-10-29. The trigger fixes already-installed Android builds immediately; the code fix is the real fix. **Must drop the trigger before onboarding a 2nd tenant**, or their rows missing `tenant_id` would silently land under hugo | §3 Option B |
 | 2026-10-29 | The committed `android/` + `capacitor.config.json` are the baseline (Hugo) identity: `build-client` refuses to start unless they're clean, restores them from git if any step fails, and `npm run reset-client` restores them after a client build. The tenant slug goes to the web build as a process env var, not into `.env.local` | Review of #7 found switching back to Hugo was impossible (no Hugo `logo.png`), `.env.local` silently kept the last client's tenant for later Hugo builds, and a failed build left `android/` half-switched and easy to commit. Git already holds the baseline, so restoring from it is simpler than snapshotting | Epic 3 |
+| 2026-10-29 | Added a `Staff insert own tenant` INSERT policy on `customers` for `authenticated`, scoped by `private.current_staff_tenant_id()` (`supabase-customers-staff-insert.sql`) | A phone signup test failed with an RLS violation: supabase-js keeps the staff login on any device used for the owner dashboard, so customer signups there run as `authenticated`, which had no INSERT policy after the tenants migration (only `anon` did). Scoping by staff tenant matches the existing staff read/update policies, so it's a permanent policy, not a stopgap | §3 Option B |
+| 2026-10-29 | Kept the `Staff insert own tenant` policy permanently rather than removing it after testing; added a "Before onboarding a 2nd client" checklist | Staff inserts are scoped to their own tenant, which is narrower than what `anon` can already do on `customers`, so the policy adds no real exposure — removing it would just re-break signups on staff devices. The actual cross-tenant exposure is the existing anon read/update/delete policies, now tracked on the checklist | §3 Option B |
 
 ## Deviations from the original strategy doc
 
