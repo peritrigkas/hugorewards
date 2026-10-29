@@ -1208,7 +1208,10 @@ function CustomerApp({ onStaffAccess }) {
       }
     }
     const code = makeCode();
-    const { data, error } = await supabase.from("customers").insert({ name, contact, code, stamps: 0 }).select().single();
+    // tenantId is only set if applyTenantConfig() resolved the tenants row;
+    // otherwise the DB's customers_default_tenant trigger fills in hugo.
+    const row = { name, contact, code, stamps: 0, ...(clientConfig.tenantId && { tenant_id: clientConfig.tenantId }) };
+    const { data, error } = await supabase.from("customers").insert(row).select().single();
     if (error) return false;
     localStorage.setItem(STORAGE_KEY, code);
     setCustomer(data);
