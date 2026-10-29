@@ -21,7 +21,7 @@ regardless of which backend architecture (A or B) is chosen.
 |---|---|---|
 | Content/copy extraction (brand name, taglines, menu, location, loyalty rules) into `src/client.config.js` | ✅ Done | [#1](https://github.com/peritrigkas/hugorewards/pull/1) |
 | CSS-variable color theming (`--c-*` custom properties sourced from `client.config.js`) | ✅ Done | [#2](https://github.com/peritrigkas/hugorewards/pull/2) |
-| Mascot/logo artwork swap-per-client — `logoUrl` (public `tenant-assets` bucket) + `loyalty.stampIcon` stamp-card icons; Hugo keeps the cow | ✅ Done | PR pending |
+| Mascot/logo artwork swap-per-client — `logoUrl` (public `tenant-assets` bucket) + `loyalty.stampIcon` stamp-card icons; Hugo keeps the cow | ✅ Done | [#10](https://github.com/peritrigkas/hugorewards/pull/10) |
 | Config schema/validation (TS type or JSON schema) | ⏳ Not started | — |
 
 ## Epic 2: Multi-tenant backend (Option B)
