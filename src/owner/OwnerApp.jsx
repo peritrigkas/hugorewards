@@ -1,49 +1,13 @@
-import { useState, useEffect } from "react";
 import { clientConfig } from "../client.config";
-import { listCustomers, setStamps, subscribeToAllCustomers } from "../lib/customers";
-import { isRewardReady, nextStampCount } from "../lib/loyalty";
-import { getStaffSession, onStaffSessionChange, signOutStaff } from "../lib/staffAuth";
+import { isRewardReady } from "../lib/loyalty";
 import { STAMPS_FOR_REWARD } from "../loyaltySettings";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { ScanPanel } from "./ScanPanel";
 import { StaffLogin } from "./StaffLogin";
+import { useOwnerCustomers } from "./useOwnerCustomers";
 
 export function OwnerApp({ onExit }) {
-  const [session, setSession] = useState(undefined); // undefined = checking, null = signed out, object = signed in
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getStaffSession().then(setSession);
-    return onStaffSessionChange(setSession);
-  }, []);
-
-  const fetchCustomers = async () => {
-    const data = await listCustomers();
-    if (data) setCustomers(data);
-  };
-
-  useEffect(() => {
-    if (!session) return;
-    fetchCustomers().finally(() => setLoading(false));
-    return subscribeToAllCustomers(fetchCustomers);
-  }, [session]);
-
-  const addStampByCode = async (code) => {
-    const target = customers.find((c) => c.code === code);
-    if (!target) return { ok: false, message: "No customer found for that code" };
-    const saved = await setStamps(code, nextStampCount(target.stamps, STAMPS_FOR_REWARD));
-    if (!saved) return { ok: false, message: "Couldn't save — try again" };
-    return { ok: true, name: target.name };
-  };
-
-  const resetStamps = async (code) => {
-    await setStamps(code, 0);
-  };
-
-  const signOut = async () => {
-    await signOutStaff();
-  };
+  const { session, customers, loading, addStampByCode, resetStamps, signOut } = useOwnerCustomers();
 
   if (session === undefined) {
     return <LoadingScreen />;

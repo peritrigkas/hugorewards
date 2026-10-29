@@ -8,7 +8,7 @@ Scratch", ref `fjclbclxdecxqiqvbfhj`), never the live Hugo project.
 |---|---|---|---|---|---|
 | **Unit** | Pure logic: customer codes, stamp/reward maths | Vitest | `npm run test:unit` | `tests/unit/` | <1s |
 | **Database security** | Who can read and change what in the shared database (row-level security) | Vitest + supabase-js | `npm run test:db` | `tests/db/` | ~8s |
-| **Smoke (end-to-end)** | The main customer and staff flows in a real browser, for each shop | Playwright | `npm run test:smoke` | `tests/smoke/` | ~30s |
+| **Smoke (end-to-end)** | The main customer and staff flows in a real browser, for each shop | Playwright | `npm run test:smoke` | `tests/smoke/` | ~40s |
 
 `npm test` runs unit, then database security, then smoke, stopping at the
 first layer that fails. Unit tests need no setup or network; the other two
@@ -100,6 +100,9 @@ The browser emulates a Pixel 7.
   6. Staff fill the card and redeem the reward.
   7. Log out, then rejoin with the same contact to get the same card back.
   8. Delete the account (database check that the row is gone).
+- **Secret staff entrance:** 7 taps on the shop name open the PIN prompt; a
+  wrong PIN keeps it open, the right one (bundled `staffPin`) leads to staff
+  sign-in.
 - **Staff scanner** rejects a code from the other shop.
 
 Staff use a **separate browser context**, like a separate device. In one
@@ -116,7 +119,8 @@ Files:
 **Finding elements.** Tests use visible text, placeholders and roles where they
 are unique. Where they aren't (the bottom-nav tabs and the account icon are
 plain clickable `div`s and icons, and "Scan Code" appears twice), the app has
-`data-testid` attributes (`nav-home`, `nav-scan`, …, `open-account`). Keep
+`data-testid` attributes (`nav-home`, `nav-scan`, …, `open-account`,
+`brand-title`). Keep
 those when moving components around.
 
 **Retries and flaky tests.** Smoke tests retry once. A test that fails and then
