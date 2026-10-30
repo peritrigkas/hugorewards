@@ -13,8 +13,9 @@ export default defineConfig({
   globalSetup: "./tests/smoke/global-setup.js",
   globalTeardown: "./tests/smoke/global-teardown.js",
   timeout: 120_000,
-  // The customer card's realtime update is occasionally missed (see "Bugs
-  // found" in refactor-plan.md); a pass on retry is reported as flaky, not hidden.
+  // Live updates used to be missed occasionally (see "Bugs found" in
+  // refactor-plan.md; fixed, cause unconfirmed); a pass on retry is reported
+  // as flaky, not hidden, so a recurrence still shows up.
   retries: 1,
   expect: { timeout: 15_000 },
   reporter: [["list"], ["html", { open: "never" }]],
