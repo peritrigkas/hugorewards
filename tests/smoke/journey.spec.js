@@ -16,7 +16,7 @@ async function newPhone(browser, testInfo) {
   return { context, page: await context.newPage() };
 }
 
-test("customer joins, gets stamped, logs out and back in, moves to a new phone, redeems and deletes", async ({ browser, page }, testInfo) => {
+test("customer joins, gets stamped, logs out and back in, gets their stamps on a new phone, redeems and deletes", async ({ browser, page }, testInfo) => {
   const slug = testInfo.project.name;
   const contact = smokeContact(slug);
   let code;
@@ -46,7 +46,7 @@ test("customer joins, gets stamped, logs out and back in, moves to a new phone, 
 
   // Staff use their own device: a separate browser context.
   const { context: staffContext, page: staff } = await newPhone(browser, testInfo);
-  const stampLine = staffStampLine(staff, code);
+  let stampLine = staffStampLine(staff, code);
 
   await test.step("staff signs in and stamps the card by typing its code", async () => {
     await signInAsStaff(staff, slug);
@@ -79,31 +79,34 @@ test("customer joins, gets stamped, logs out and back in, moves to a new phone, 
 
   // The customer gets a new phone: a fresh install, so a fresh account.
   const { context: phone2Context, page: phone2 } = await newPhone(browser, testInfo);
-  let tempCode;
+  let newCode;
 
   await test.step("new phone: joining with the same contact shows the already-have-a-card banner", async () => {
     await joinAsCustomer(phone2, "Smoke Newphone", contact.toUpperCase());
     await expect(phone2.getByText("Looks like you already have a card with us")).toBeVisible();
-    tempCode = await phone2.locator("b").filter({ hasText: /^[A-Z]+-[0-9A-Z]{5}$/ }).textContent();
-    expect(tempCode).not.toBe(code);
+    newCode = await phone2.locator("b").filter({ hasText: /^[A-Z]+-[0-9A-Z]{5}$/ }).textContent();
+    expect(newCode).not.toBe(code);
   });
 
-  await test.step("staff see the possible earlier card on the new card and move it here", async () => {
-    const newRow = staffRow(staff, tempCode);
+  await test.step("staff see the possible earlier card on the new card only, and add its stamps there", async () => {
+    const newRow = staffRow(staff, newCode);
     await expect(newRow.getByText("Possible earlier card:")).toContainText(`Smoke Renamed · 1 stamps · ${code}`);
-    await newRow.getByRole("button", { name: "Move it here" }).click();
-    await expect(staffRow(staff, tempCode)).toHaveCount(0);
-    await expect(stampLine).toHaveText(`1 / ${stampsForReward} stamps · ${code}`);
+    await expect(staffRow(staff, code).getByText("Possible earlier card:")).toHaveCount(0);
+    await newRow.getByRole("button", { name: "Add its stamps here" }).click();
+    await expect(staffRow(staff, code)).toHaveCount(0);
+    await expect(staffStampLine(staff, newCode)).toHaveText(`1 / ${stampsForReward} stamps · ${newCode}`);
   });
 
-  await test.step("the new phone now shows the old card and its stamps", async () => {
+  await test.step("the new phone keeps its own code and now has the old card's stamps", async () => {
     await expect(phone2.getByText("Looks like you already have a card with us")).toBeHidden();
     await expect(phone2.getByText(`1/${stampsForReward}`, { exact: true })).toBeVisible();
     await expect(phone2.getByText("Hey Smoke!")).toBeVisible();
     await phone2.getByTestId("open-account").click();
-    await expect(phone2.getByText(`Your loyalty code: ${code}`)).toBeVisible();
+    await expect(phone2.getByText(`Your loyalty code: ${newCode}`)).toBeVisible();
     await phone2.getByTestId("nav-home").click();
   });
+  code = newCode;
+  stampLine = staffStampLine(staff, code);
 
   await test.step("the old phone no longer has the card", async () => {
     await page.reload();
@@ -156,8 +159,26 @@ test("a device signed in as staff shows a notice instead of customer screens", a
   await signInAsStaff(page, testInfo.project.name);
   await page.getByRole("button", { name: "Exit staff mode" }).click();
   await expect(page.getByText("Signed in as staff")).toBeVisible();
+  await page.getByRole("button", { name: "Back to staff dashboard" }).click();
+  await expect(page.getByText(/— Staff$/)).toBeVisible();
+  await page.getByRole("button", { name: "Exit staff mode" }).click();
   await page.getByRole("button", { name: "Sign out of staff" }).click();
   await expect(page.getByPlaceholder("Your name")).toBeVisible();
+});
+
+test("staff on a customer's own phone: reopening goes to the dashboard, and signing out brings the same card back", async ({ page }, testInfo) => {
+  await joinAsCustomer(page, "Smoke Sharer", smokeContact(testInfo.project.name));
+  await page.getByTestId("nav-scan").click();
+  const code = await page.getByText(/^[A-Z]+-[0-9A-Z]{5}$/).textContent();
+
+  await signInAsStaff(page, testInfo.project.name);
+  await page.goto("/"); // close and reopen the app
+  await expect(page.getByText(/— Staff$/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page.getByText("Hey Smoke!")).toBeVisible();
+  await page.getByTestId("nav-scan").click();
+  await expect(page.getByText(code, { exact: true })).toBeVisible();
 });
 
 test("staff scanner rejects another shop's code", async ({ page }, testInfo) => {

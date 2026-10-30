@@ -105,11 +105,16 @@ back, but that can't be relied on.)
 2. Staff tap **Move card** on the flagged row, or on any old card and scan or
    type the new card's code.
 3. The database function `move_card(old_code, new_code)` (security definer,
-   only for staff of the shop both cards belong to) moves the old card to the
-   new phone's account and deletes the new empty card. The customer keeps the
-   old card's code, stamps and name.
+   only for staff of the shop both cards belong to) adds the old card's
+   stamps to the new card and deletes the old card. The new phone keeps its
+   own code and name. (Changed 2026-10-30, `supabase-move-card-merge.sql`:
+   the first version moved the old card onto the new phone and deleted the
+   new card, so picking the cards the wrong way round deleted a card with
+   stamps. Adding stamps never loses any, whichever way round staff pick.)
 
-The new phone sees its card change live and shows the old card.
+The new phone sees its stamps change live. Only the newest card with a
+matching contact shows the "possible earlier card" hint, so a customer with
+several old cards is suggested once.
 
 Email-code restore, for a new phone without visiting the shop, is a planned
 follow-up. Even then it would be used only when changing phones, never on
@@ -136,9 +141,13 @@ normal launch.
   - If staff are signed in on the device, the customer screens show "Signed
     in as staff on this device" with a sign-out button, instead of quietly
     acting as staff, which is what happens today.
-  - The staff sign-in screen warns when the device holds a customer card,
-    since signing in as staff ends that phone's customer account. The card
-    stays recoverable by Move card.
+  - The staff sign-in screen warns when the device holds a customer card.
+    Staff sign-in replaces that phone's customer account, so the app keeps
+    the customer account's refresh token and signs it back in when staff
+    sign out: same card, same stamps (added 2026-10-30).
+  - Reopening the app while signed in as staff goes straight to the staff
+    dashboard; the "Signed in as staff" screen also offers "Back to staff
+    dashboard".
   - Shop devices and customer phones stay separate.
 
 ### Abuse protection

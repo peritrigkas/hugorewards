@@ -2,7 +2,7 @@ import { useState } from "react";
 import { clientConfig } from "../../client.config";
 import { BrandMark } from "../../components/BrandMark";
 
-function CenteredMessage({ title, body, actionLabel, busyLabel, onAction }) {
+function CenteredMessage({ title, body, actionLabel, busyLabel, onAction, secondaryLabel, onSecondary }) {
   const [busy, setBusy] = useState(false);
   return (
     <div style={{ background: "var(--c-cream)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -21,6 +21,15 @@ function CenteredMessage({ title, body, actionLabel, busyLabel, onAction }) {
         >
           {busy ? busyLabel : actionLabel}
         </button>
+        {secondaryLabel && (
+          <button
+            disabled={busy}
+            onClick={onSecondary}
+            style={{ width: "100%", marginTop: 10, background: "transparent", color: "var(--c-dark)", border: "1px solid var(--c-dark)", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, cursor: busy ? "not-allowed" : "pointer" }}
+          >
+            {secondaryLabel}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -40,15 +49,17 @@ export function LoggedOutScreen({ onLogBackIn }) {
 }
 
 // A device holds one login at a time, so customer screens can't run while
-// staff are signed in here.
-export function StaffOnDeviceScreen({ onSignOut }) {
+// staff are signed in here. Signing out brings back this phone's own card.
+export function StaffOnDeviceScreen({ onSignOut, onOpenStaff }) {
   return (
     <CenteredMessage
       title="Signed in as staff"
-      body="This device is signed in to the staff dashboard. Sign out of staff to use a customer card here."
+      body="This device is signed in to the staff dashboard. Sign out of staff to use your customer card here."
       actionLabel="Sign out of staff"
       busyLabel="Signing out…"
       onAction={onSignOut}
+      secondaryLabel="Back to staff dashboard"
+      onSecondary={onOpenStaff}
     />
   );
 }

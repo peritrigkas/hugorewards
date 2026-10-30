@@ -126,16 +126,21 @@ The browser emulates a Pixel 7.
      same card, same stamps.
   7. **New phone:** joining with the same contact (different capitalisation)
      shows the "already have a card" banner.
-  8. Staff see "Possible earlier card" on the new card and tap **Move it
-     here**. The new phone switches live to the old card and stamps; the old
-     phone no longer has a card.
+  8. Staff see "Possible earlier card" on the new card only, and tap **Add
+     its stamps here**. The new phone keeps its own code and gets the old
+     card's stamps live; the old card is removed, so the old phone no longer
+     has a card.
   9. Staff fill the card and redeem the reward.
   10. Delete the account (database check that the row is gone).
 - **Secret staff entrance:** 7 taps on the shop name open the PIN prompt; a
   wrong PIN keeps it open, the right one (bundled `staffPin`) leads to staff
   sign-in, which warns that this device holds a customer card.
 - **Staff on a customer device:** after signing in as staff and leaving staff
-  mode, the customer screens show "Signed in as staff" until staff sign out.
+  mode, the customer screens show "Signed in as staff" with "Back to staff
+  dashboard" and "Sign out of staff".
+- **Staff on a customer's own phone:** reopening the app while signed in as
+  staff opens the dashboard; signing out of staff brings back the phone's own
+  card (same code).
 - **Staff scanner** rejects a code from the other shop.
 
 Each "phone" (customer, new phone, staff device) is a **separate browser

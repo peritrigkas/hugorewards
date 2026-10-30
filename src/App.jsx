@@ -4,8 +4,9 @@
 //
 // main.jsx imports this file only after applyTenantConfig() has resolved the
 // tenant, so modules under it may read clientConfig at import time.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clientConfig } from "./client.config";
+import { getDeviceSession, isStaffSession } from "./lib/customerAuth";
 import { CustomerApp } from "./customer/CustomerApp";
 import { OwnerApp } from "./owner/OwnerApp";
 
@@ -18,6 +19,12 @@ function ThemeVars() {
 export default function App() {
   const queryOwner = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("owner");
   const [ownerMode, setOwnerMode] = useState(queryOwner);
+  // Reopening the app while staff are signed in goes straight back to the dashboard.
+  useEffect(() => {
+    getDeviceSession().then((session) => {
+      if (isStaffSession(session)) setOwnerMode(true);
+    });
+  }, []);
   return (
     <>
       <ThemeVars />

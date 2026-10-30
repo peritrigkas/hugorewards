@@ -29,7 +29,7 @@ export function StaffLogin({ onLoggedIn, customerOnDevice }) {
         <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 22 }}>Sign in with your staff account to add stamps.</div>
         {customerOnDevice && (
           <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-error)", background: "var(--c-errorBg)", borderRadius: 12, padding: "10px 12px", marginTop: -8, marginBottom: 18 }}>
-            This device has a customer card. Signing in as staff logs that card out of this device — staff can move it back with “Move card”.
+            This device has a customer card. It comes back when you sign out of staff.
           </div>
         )}
         <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
