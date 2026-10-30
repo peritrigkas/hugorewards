@@ -104,8 +104,15 @@ There are **none right now**: anonymous sign-in closed the original nine.
 
 Files:
 - `security.test.js`: the tests, grouped by table and by kind of user.
-- `helpers.js`: test customers (`seedCustomer`), customer and staff sign-in,
-  cleanup, and `knownHole`.
+- `promos.test.js`: promo cards and past cards (`promos`, `promo_stamps`,
+  `card_history`, and the `add_stamp` / `redeem` functions): who can manage
+  promos, stamp and redeem; running, claim-window and finished promos; and
+  `move_card` carrying promo stamps and history. A shop runs one promo at a
+  time, so a promo made by hand on scratch whose dates clash with the tests'
+  (today to 40 days ahead, or the past 60 days) makes the setup fail; delete
+  it first.
+- `helpers.js`: test customers (`seedCustomer`) and promos (`seedPromo`,
+  `shopDay`), customer and staff sign-in, cleanup, and `knownHole`.
 
 ## Smoke tests (`tests/smoke/`)
 
