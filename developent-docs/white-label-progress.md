@@ -90,10 +90,10 @@ client's app ships.
   and publish 1.0.4; (3) then Supabase → Authentication → Attack Protection →
   enable CAPTCHA with the widget's secret key. Step 3 stops 1.0.3 and older
   from creating cards or signing staff in (agreed: test data only).
-- [ ] **Apply `supabase-move-card-merge.sql` to live** — "Move card" adds the
+- [x] **Apply `supabase-move-card-merge.sql` to live** — "Move card" adds the
   old card's stamps to the card on the customer's phone instead of deleting
   it. Same function name and arguments, so 1.0.3 gets it without an update.
-  Tested on scratch 2026-10-30.
+  Tested on scratch and applied to live 2026-10-30 ([#21](https://github.com/peritrigkas/hugorewards/pull/21)).
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their
   logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
   `config.loyalty.stampIcon`, and override the cow-themed copy
