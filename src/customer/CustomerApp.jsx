@@ -40,7 +40,7 @@ export function CustomerApp({ onStaffAccess }) {
   }
 
   if (staffOnDevice) {
-    return <StaffOnDeviceScreen onSignOut={signOutStaffOnDevice} />;
+    return <StaffOnDeviceScreen onSignOut={signOutStaffOnDevice} onOpenStaff={onStaffAccess} />;
   }
 
   if (!customer) {

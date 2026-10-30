@@ -79,11 +79,19 @@ describe("normalizeContact", () => {
 describe("findEarlierCards", () => {
   const card = (id, contact, created_at) => ({ id, contact, created_at });
 
-  it("links a newer card to the oldest card with the same contact", () => {
+  it("links only the newest card to the oldest card with the same contact", () => {
     const old = card("old", "07827 421616", "2026-10-01T10:00:00Z");
     const mid = card("mid", "07827421616", "2026-10-15T10:00:00Z");
     const fresh = card("new", "(07827) 421616", "2026-10-29T10:00:00Z");
-    expect(findEarlierCards([fresh, old, mid])).toEqual({ mid: old, new: old });
+    expect(findEarlierCards([fresh, old, mid])).toEqual({ new: old });
+  });
+
+  it("gives each customer their own suggestion", () => {
+    const periOld = card("periOld", "peri@example.com", "2026-10-01T10:00:00Z");
+    const naniOld = card("naniOld", "nani@example.com", "2026-10-02T10:00:00Z");
+    const periNew = card("periNew", "Peri@example.com", "2026-10-03T10:00:00Z");
+    const naniNew = card("naniNew", "nani@example.com", "2026-10-04T10:00:00Z");
+    expect(findEarlierCards([periOld, naniOld, periNew, naniNew])).toEqual({ periNew: periOld, naniNew: naniOld });
   });
 
   it("ignores cards without a contact and cards with different contacts", () => {

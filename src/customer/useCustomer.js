@@ -92,10 +92,11 @@ export function useCustomer() {
     return true;
   };
 
+  // Brings back this phone's own card, if staff sign-in replaced it.
   const signOutStaffOnDevice = async () => {
     await signOutStaff();
-    setStaffOnDevice(false);
     setCustomer(null);
+    await load();
   };
 
   return {
