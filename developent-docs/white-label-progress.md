@@ -80,7 +80,7 @@ client's app ships.
   older app versions stop working at step 3 (agreed: only test data).
   Done 2026-10-30, with step 2 left to the dashboard SQL editor (the
   old cards aren't linked to any phone, so no app can reach them).
-- [ ] **CAPTCHA (Cloudflare Turnstile) on customer and staff sign-in**
+- [x] **CAPTCHA (Cloudflare Turnstile) on customer and staff sign-in** (live 2026-10-30: 1.0.4 published, CAPTCHA on in live Supabase, verified on a phone)
   before real customers — built in [#19](https://github.com/peritrigkas/hugorewards/pull/19), ships as Android
   **1.0.4** (versionCode 5) after 1.0.3 is live; until then the per-IP
   anonymous rate limit is the only protection against scripted account
