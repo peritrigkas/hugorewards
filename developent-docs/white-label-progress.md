@@ -40,7 +40,7 @@ over per-client Supabase projects (Option A) for cost reasons at ~10 clients
 | Customer signups send `tenant_id` (fix for signups broken since 2026-09-23) | ✅ Done — plus temporary DB trigger defaulting to `hugo`, to be removed before a 2nd tenant | [#8](https://github.com/peritrigkas/hugorewards/pull/8) |
 | Staff-logged-in devices can sign customers up (`Staff insert own tenant` policy) | ✅ Applied live 2026-10-29 | [#9](https://github.com/peritrigkas/hugorewards/pull/9) |
 | Database security tests (`npm run test:db`, Vitest against the scratch project as anon / Hugo staff / Daisy staff) | ✅ Done — 26 tests; 9 were `knownHole`s for the anon `customers` policies, all closed by anonymous sign-in (now 40 tests, none known holes) | [#12](https://github.com/peritrigkas/hugorewards/pull/12) |
-| **Anonymous customer sign-in** (`developent-docs/anon-customers-design.md`, `supabase-anon-customers.sql`): each install gets an anonymous account, cards belong to it (`user_id`), customers see/change only their own card (name + contact), staff "Move card" for new phones, "already have a card?" banner | 🚧 Applied and tested on **scratch** 2026-10-29; live rollout pending (see checklist) | [#18](https://github.com/peritrigkas/hugorewards/pull/18) |
+| **Anonymous customer sign-in** (`developent-docs/anon-customers-design.md`, `supabase-anon-customers.sql`): each install gets an anonymous account, cards belong to it (`user_id`), customers see/change only their own card (name + contact), staff "Move card" for new phones, "already have a card?" banner | ✅ Live 2026-10-30: migration applied to live, Android 1.0.3 published | [#18](https://github.com/peritrigkas/hugorewards/pull/18) |
 
 ## Epic 3: Distribution — per-client packaging (C2)
 
@@ -70,7 +70,7 @@ client's app ships.
   installs to update~~ — superseded: 1.0.2 (versionCode 3, [#11](https://github.com/peritrigkas/hugorewards/pull/11),
   sent for Play review 2026-10-29) stops working once anonymous sign-in goes
   live, so the release that matters is **1.0.3** (versionCode 4) below.
-- [ ] **Go live with anonymous customer sign-in** — replaces the old
+- [x] **Go live with anonymous customer sign-in** (done 2026-10-30) — replaces the old
   "drop the `customers_default_tenant` trigger" and "scope the anon
   `customers` policies" items; `supabase-anon-customers.sql` does both.
   Applied and tested on scratch (40 DB + 8 smoke tests, no known holes).
@@ -78,8 +78,10 @@ client's app ships.
   anonymous sign-ins" on the live project; (2) delete the test customers;
   (3) apply `supabase-anon-customers.sql`; (4) release Android 1.0.3. All
   older app versions stop working at step 3 (agreed: only test data).
+  Done 2026-10-30, with step 2 left to the dashboard SQL editor (the
+  old cards aren't linked to any phone, so no app can reach them).
 - [ ] **CAPTCHA (Cloudflare Turnstile) on customer and staff sign-in**
-  before real customers — built in the follow-up PR, ships as Android
+  before real customers — built in [#19](https://github.com/peritrigkas/hugorewards/pull/19), ships as Android
   **1.0.4** (versionCode 5) after 1.0.3 is live; until then the per-IP
   anonymous rate limit is the only protection against scripted account
   creation. Live steps, in order: (1) create a Turnstile widget in Cloudflare
