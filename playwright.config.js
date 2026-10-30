@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { scratchEnv } from "./tests/support/scratch.js";
+import { CAPTCHA_TEST_SITE_KEY, scratchEnv } from "./tests/support/scratch.js";
 
 // One dev server per shop, both pointed at the scratch project. Vite gives
 // these process env vars priority over the live keys in .env.
@@ -32,6 +32,7 @@ export default defineConfig({
       VITE_SUPABASE_URL: scratchEnv.SCRATCH_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY: scratchEnv.SCRATCH_SUPABASE_ANON_KEY,
       VITE_TENANT_SLUG: slug,
+      VITE_TURNSTILE_SITE_KEY: CAPTCHA_TEST_SITE_KEY,
     },
   })),
 });

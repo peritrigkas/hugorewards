@@ -31,6 +31,15 @@ need the setup below.
    raised to about 300/hour. Each full run creates a few dozen anonymous
    accounts, and the default 30/hour would block repeated runs.
 
+5. Still in the scratch dashboard: **Authentication → Attack Protection →
+   "Enable Captcha protection"** on, provider **Cloudflare Turnstile**,
+   secret key `1x0000000000000000000000000000000AA`. That is Cloudflare's
+   public always-pass *test* secret, so the tests' dummy token
+   (`CAPTCHA_TEST_TOKEN`) and the smoke servers' test site key
+   (`CAPTCHA_TEST_SITE_KEY`, both in `tests/support/scratch.js`) pass the
+   check, while a sign-in with no token is refused. Never use the test keys
+   on the live project.
+
 No staff passwords or test data need setting up; the tests create their own.
 
 ## Safety rules (all layers)

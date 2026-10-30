@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { it } from "vitest";
-import { admin, anonClient, ensureStaffAccount, must } from "../support/scratch.js";
+import { admin, anonClient, CAPTCHA_TEST_TOKEN, ensureStaffAccount, must } from "../support/scratch.js";
 
-export { admin, anonClient, getTenantIds } from "../support/scratch.js";
+export { admin, anonClient, ensureStaffAccount, getTenantIds } from "../support/scratch.js";
 
 // Every customer these tests create gets a code with this prefix, so cleanup
 // also removes leftovers from crashed runs.
@@ -17,7 +17,7 @@ const customerUserIds = [];
 // A customer's phone: a fresh anonymous account, as the app creates on joining.
 export async function signInCustomer() {
   const client = anonClient();
-  const { user } = must(await client.auth.signInAnonymously());
+  const { user } = must(await client.auth.signInAnonymously({ options: { captchaToken: CAPTCHA_TEST_TOKEN } }));
   customerUserIds.push(user.id);
   return { client, userId: user.id };
 }
@@ -25,7 +25,7 @@ export async function signInCustomer() {
 export async function signInStaff(slug, tenantId) {
   const { email, password, userId } = await ensureStaffAccount("rls-test", slug, tenantId);
   const client = anonClient();
-  must(await client.auth.signInWithPassword({ email, password }));
+  must(await client.auth.signInWithPassword({ email, password, options: { captchaToken: CAPTCHA_TEST_TOKEN } }));
   return { client, userId };
 }
 

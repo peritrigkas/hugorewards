@@ -168,3 +168,12 @@ test("staff scanner rejects another shop's code", async ({ page }, testInfo) => 
   await codeInput.press("Enter");
   await expect(page.getByText(/doesn't look like a .+ code/)).toBeVisible();
 });
+
+test("joining shows an error when the bot check can't load", async ({ page }, testInfo) => {
+  await page.route("https://challenges.cloudflare.com/**", (route) => route.abort());
+  await page.goto("/");
+  await page.getByPlaceholder("Your name").fill("Smoke Blocked");
+  await page.getByPlaceholder("Phone or email").fill(smokeContact(testInfo.project.name));
+  await page.getByRole("button", { name: /^Join / }).click();
+  await expect(page.getByText("Couldn't join right now")).toBeVisible();
+});

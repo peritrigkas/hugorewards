@@ -30,6 +30,11 @@ export const admin = createClient(url, serviceKey, clientOptions);
 
 export const anonClient = () => createClient(url, anonKey, clientOptions);
 
+// Scratch uses Cloudflare's always-pass Turnstile test keys, so this dummy
+// token passes the CAPTCHA check (see tests/README.md).
+export const CAPTCHA_TEST_TOKEN = "XXXX.DUMMY.TOKEN.XXXX";
+export const CAPTCHA_TEST_SITE_KEY = "1x00000000000000000000AA";
+
 export const must = ({ data, error }) => {
   if (error) throw error;
   return data;
