@@ -323,36 +323,51 @@ describe("customers — customer accounts (anonymous sign-in)", () => {
 });
 
 describe("move card (customer on a new phone)", () => {
-  it("staff move an old card onto the new phone's account; the new empty card is removed", async () => {
+  // The card on the customer's current phone keeps its code; the old card's
+  // stamps are added to it and the old card is removed.
+  it("staff add an old card's stamps to the new phone's card; the old card is removed", async () => {
     const oldCard = await seedCustomer(tenants.hugo, { stamps: 5 });
     const newPhone = await signInCustomer();
     const newCard = await seedCustomer(tenants.hugo, { user_id: newPhone.userId, stamps: 0 });
 
     const { error } = await hugoStaff.client.rpc("move_card", { old_code: oldCard.code, new_code: newCard.code });
     expect(error).toBeNull();
-    expect(await readCustomer(newCard.id)).toBeNull();
+    expect(await readCustomer(oldCard.id)).toBeNull();
 
     const { data } = await newPhone.client.from("customers").select("code, stamps").single();
-    expect(data).toEqual({ code: oldCard.code, stamps: 5 });
+    expect(data).toEqual({ code: newCard.code, stamps: 5 });
+  });
+
+  it("never loses stamps: stamps already on the new card are added to, even if the cards are picked the wrong way round", async () => {
+    const phoneA = await signInCustomer();
+    const cardA = await seedCustomer(tenants.hugo, { user_id: phoneA.userId, stamps: 4 });
+    const phoneB = await signInCustomer();
+    const cardB = await seedCustomer(tenants.hugo, { user_id: phoneB.userId, stamps: 3 });
+
+    const { error } = await hugoStaff.client.rpc("move_card", { old_code: cardA.code, new_code: cardB.code });
+    expect(error).toBeNull();
+    expect(await readCustomer(cardA.id)).toBeNull();
+    expect((await readCustomer(cardB.id)).stamps).toBe(7);
   });
 
   it("another shop's staff cannot move the card", async () => {
-    const oldCard = await seedCustomer(tenants.hugo);
+    const oldCard = await seedCustomer(tenants.hugo, { stamps: 2 });
     const newPhone = await signInCustomer();
-    const newCard = await seedCustomer(tenants.hugo, { user_id: newPhone.userId });
+    const newCard = await seedCustomer(tenants.hugo, { user_id: newPhone.userId, stamps: 0 });
     const { error } = await daisyStaff.client.rpc("move_card", { old_code: oldCard.code, new_code: newCard.code });
     expect(error).not.toBeNull();
-    expect((await readCustomer(oldCard.id)).user_id).toBeNull();
-    expect(await readCustomer(newCard.id)).not.toBeNull();
+    expect((await readCustomer(oldCard.id)).stamps).toBe(2);
+    expect((await readCustomer(newCard.id)).stamps).toBe(0);
   });
 
   it("customers cannot move cards, not even onto their own phone", async () => {
     const oldCard = await seedCustomer(tenants.hugo, { stamps: 7 });
     const thief = await signInCustomer();
-    const thiefCard = await seedCustomer(tenants.hugo, { user_id: thief.userId });
+    const thiefCard = await seedCustomer(tenants.hugo, { user_id: thief.userId, stamps: 0 });
     const { error } = await thief.client.rpc("move_card", { old_code: oldCard.code, new_code: thiefCard.code });
     expect(error).not.toBeNull();
-    expect((await readCustomer(oldCard.id)).user_id).toBeNull();
+    expect((await readCustomer(oldCard.id)).stamps).toBe(7);
+    expect((await readCustomer(thiefCard.id)).stamps).toBe(0);
   });
 
   it("is refused when the new card isn't linked to a phone", async () => {
@@ -360,6 +375,7 @@ describe("move card (customer on a new phone)", () => {
     const walkIn = await seedCustomer(tenants.hugo);
     const { error } = await hugoStaff.client.rpc("move_card", { old_code: oldCard.code, new_code: walkIn.code });
     expect(error?.message).toMatch(/not linked to a phone/);
+    expect(await readCustomer(oldCard.id)).not.toBeNull();
     expect(await readCustomer(walkIn.id)).not.toBeNull();
   });
 });

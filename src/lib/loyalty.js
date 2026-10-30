@@ -16,18 +16,22 @@ export const isRewardReady = (stamps, stampsForReward) => stamps >= stampsForRew
 // "07827421616". Mirrors private.normalize_contact in supabase-anon-customers.sql.
 export const normalizeContact = (contact) => (contact || "").toLowerCase().replace(/[\s.()-]/g, "");
 
-// For the staff list: maps each card's id to an older card in the list with
-// the same contact — likely the same customer, now on a new phone.
+// For the staff list: when several cards share a contact (likely the same
+// customer on a new phone), maps the newest one's id to the oldest one. Only
+// the newest card gets a suggestion, so each customer shows up once.
 export function findEarlierCards(customers) {
-  const oldestByContact = new Map();
-  const earlier = {};
+  const byContact = new Map();
   const byAge = [...customers].sort((a, b) => a.created_at.localeCompare(b.created_at));
   for (const card of byAge) {
     const key = normalizeContact(card.contact);
     if (!key) continue;
-    const first = oldestByContact.get(key);
-    if (first) earlier[card.id] = first;
-    else oldestByContact.set(key, card);
+    const group = byContact.get(key) ?? { oldest: card, newest: card };
+    group.newest = card;
+    byContact.set(key, group);
+  }
+  const earlier = {};
+  for (const { oldest, newest } of byContact.values()) {
+    if (oldest !== newest) earlier[newest.id] = oldest;
   }
   return earlier;
 }

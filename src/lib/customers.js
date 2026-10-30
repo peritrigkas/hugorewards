@@ -45,8 +45,9 @@ export async function setStamps(code, stamps) {
   return !error;
 }
 
-// Staff: moves the old card onto the phone behind the new card and deletes the
-// new one. Resolves to null on success, or the reason it was refused.
+// Staff: adds the old card's stamps to the new card (the one on the customer's
+// phone now) and removes the old card. Resolves to null on success, or the
+// reason it was refused.
 export async function moveCard(oldCode, newCode) {
   const { error } = await supabase.rpc("move_card", { old_code: oldCode, new_code: newCode });
   return error ? error.message : null;

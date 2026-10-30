@@ -23,7 +23,7 @@ export function OwnerApp({ onExit }) {
       <div style={{ background: "var(--c-dark)", padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 22, color: "var(--c-cream)" }}>{clientConfig.brandName} — Staff</div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={signOut} style={{ background: "transparent", color: "var(--c-lilac)", border: "1px solid var(--c-lilac)", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+          <button onClick={async () => { await signOut(); onExit?.(); }} style={{ background: "transparent", color: "var(--c-lilac)", border: "1px solid var(--c-lilac)", borderRadius: 999, padding: "6px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
             Sign out
           </button>
           {onExit && (
