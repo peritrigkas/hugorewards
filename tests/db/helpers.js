@@ -47,8 +47,43 @@ export async function readCustomerByCode(code) {
   return must(await admin.from("customers").select("*").eq("code", code).maybeSingle());
 }
 
+// Days in the shop's time zone (the scratch shops use the default,
+// Europe/London), as YYYY-MM-DD: shopDay(0) is today, shopDay(-1) yesterday.
+export function shopDay(offset = 0) {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
+  const day = new Date(`${today}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + offset);
+  return day.toISOString().slice(0, 10);
+}
+
+// Every promo these tests create is named with this prefix, so cleanup also
+// removes leftovers from crashed runs. A shop runs one promo at a time, so
+// promos made by hand on scratch can clash with the tests' dates.
+const PROMO_PREFIX = "RLSTEST ";
+
+export async function seedPromo(tenantId, { from = 0, to = 30, ...fields } = {}) {
+  return must(
+    await admin
+      .from("promos")
+      .insert({ name: `${PROMO_PREFIX}Waffles`, icon: "cookie", stamps_for_reward: 4, starts_on: shopDay(from), ends_on: shopDay(to), tenant_id: tenantId, ...fields })
+      .select()
+      .single()
+  );
+}
+
+export async function readPromoStamps(customerId) {
+  return must(await admin.from("promo_stamps").select("promo_id, stamps").eq("customer_id", customerId));
+}
+
+export async function readHistory(customerId) {
+  return must(await admin.from("card_history").select("*").eq("customer_id", customerId).order("finished_at"));
+}
+
 export async function cleanup() {
+  // Customers first: their promo stamps and history go with them, which a
+  // promo with stamps needs before it can be deleted.
   must(await admin.from("customers").delete().like("code", `${CODE_PREFIX}%`));
+  must(await admin.from("promos").delete().like("name", `${PROMO_PREFIX}%`));
   for (const id of customerUserIds.splice(0)) {
     must(await admin.auth.admin.deleteUser(id));
   }

@@ -1,6 +1,8 @@
 # Promo cards and past cards: design
 
-Status: **draft for review** (2026-10-30). Nothing built yet.
+Status: **agreed** (2026-10-30). Database built and tested on scratch
+(`supabase-promo-cards.sql`, `tests/db/promos.test.js`); not yet on live.
+App screens not built yet.
 
 ## Summary
 
@@ -146,8 +148,9 @@ New tables, all with RLS:
 | `starts_on`, `ends_on` date | `ends_on >= starts_on` |
 | `claim_days` int | default 14 |
 
-- No two promos in the same shop may have overlapping date ranges. Enforce
-  this with an exclusion constraint (`btree_gist`) or a trigger.
+- No two promos in the same shop may have overlapping date ranges, enforced
+  by an exclusion constraint (`btree_gist`), which is safe even when two
+  staff save at the same moment.
 - A trigger locks `stamps_for_reward` and blocks deletes once
   `promo_stamps` has rows for the promo.
 
@@ -194,18 +197,25 @@ anything left behind has expired. The Past cards tab merges both lists.
 
 Security definer, staff of the card's shop only:
 
-- **`add_stamp(code, promo_id)`**
-  - `promo_id` null means the main card.
+- **`add_stamp(card_code, promo)`**, returning the card's new stamp count
+  - `promo` null means the main card. Its stamps needed come from
+    `config.loyalty.stampsForReward`, default 9 as in the app.
   - Promo stamps only while the promo is running, in shop time.
-  - Never above `stamps_for_reward`.
-- **`redeem(code, promo_id)`**
+  - Never above `stamps_for_reward`, and never takes stamps away from a card
+    that's already over it (possible after moving stamps).
+- **`redeem(card_code, promo)`**
   - The card must be full.
+  - The main card's history entry is named after the shop (`brand_name`)
+    with the shop's stamp icon.
   - In one transaction: write the `card_history` snapshot, then reset the
     main card to 0 or delete the `promo_stamps` row.
   - Promo cards can be redeemed during the run and the claim window.
 - **`move_card`** (existing) also:
-  - adds promo stamps per promo
+  - adds promo stamps per promo (not capped, so none are lost)
   - moves `card_history` rows onto the new card
+
+Promo stamps and redemptions also touch the customer's row, so the live
+updates the app already listens to (on `customers`) fire for promo cards too.
 
 The main card's "+ Stamp" moves from a direct table update to `add_stamp`,
 so both cards follow one path. The column guard on `customers` stays.

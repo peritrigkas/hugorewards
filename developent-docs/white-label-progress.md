@@ -94,6 +94,14 @@ client's app ships.
   old card's stamps to the card on the customer's phone instead of deleting
   it. Same function name and arguments, so 1.0.3 gets it without an update.
   Tested on scratch and applied to live 2026-10-30 ([#21](https://github.com/peritrigkas/hugorewards/pull/21)).
+- [ ] **Promo cards and past cards** (`developent-docs/promo-cards-design.md`)
+  - [x] Database: `supabase-promo-cards.sql`, tested on scratch 2026-10-30
+    (`tests/db/promos.test.js`)
+  - [ ] App: customer promo card and Past cards tab; staff customer view,
+    "Scans add to" switch and Promo page; stamping and redeeming through
+    `add_stamp` / `redeem`
+  - [ ] Apply the SQL to live (additive, safe for 1.0.3/1.0.4), then release
+    the app as 1.0.5 or later
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their
   logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
   `config.loyalty.stampIcon`, and override the cow-themed copy
