@@ -78,9 +78,16 @@ client's app ships.
   anonymous sign-ins" on the live project; (2) delete the test customers;
   (3) apply `supabase-anon-customers.sql`; (4) release Android 1.0.3. All
   older app versions stop working at step 3 (agreed: only test data).
-- [ ] **CAPTCHA (Turnstile/hCaptcha) on anonymous sign-in** before real
-  customers — follow-up PR; the per-IP anonymous rate limit is the only
-  protection against scripted account creation until then.
+- [ ] **CAPTCHA (Cloudflare Turnstile) on customer and staff sign-in**
+  before real customers — built in the follow-up PR, ships as Android
+  **1.0.4** (versionCode 5) after 1.0.3 is live; until then the per-IP
+  anonymous rate limit is the only protection against scripted account
+  creation. Live steps, in order: (1) create a Turnstile widget in Cloudflare
+  (hostname `localhost`, which is where the Android app runs; mode Managed)
+  and put its site key in `.env` as `VITE_TURNSTILE_SITE_KEY`; (2) build
+  and publish 1.0.4; (3) then Supabase → Authentication → Attack Protection →
+  enable CAPTCHA with the widget's secret key. Step 3 stops 1.0.3 and older
+  from creating cards or signing staff in (agreed: test data only).
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their
   logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
   `config.loyalty.stampIcon`, and override the cow-themed copy
@@ -121,6 +128,7 @@ section it updates or overrides.
 | 2026-10-29 | Fixed tenant `config` merge: `loyalty`/`colors` overrides now merge key-by-key with the bundled config | PR #6's `Object.assign` replaced those objects wholesale before merging, so a tenant row setting one color or loyalty field would have lost all the others. Latent only — Hugo's row has `config = {}` | §3 Option B |
 | 2026-10-29 | Added database security tests (Vitest, `tests/db/`) that run against the scratch project as anon, Hugo staff and Daisy staff; rules the DB does not enforce yet are written as the desired behaviour and marked `knownHole` (`it.fails`) | The project had no automated tests, and signups were silently broken for five weeks (2026-09-23 to 2026-10-29). Writing the holes as expected failures keeps the suite green today and makes it flag each hole as it gets fixed, so they double as the acceptance test for the anon `customers` redesign. Tests self-provision staff accounts (random password per run) via the service-role key in git-ignored `.env.test.local`, and refuse to run against the live project ref | §3 Option B |
 | 2026-10-29 | Customers prove card ownership with Supabase **anonymous sign-in** (one invisible account per app install, `customers.user_id`); log out only hides the card on that phone; a new phone gets its old card back via staff **Move card** (`move_card`), prompted by an "already have a card?" banner matched on normalized contact; email-code restore and CAPTCHA are follow-ups | The anon key is in every app, so the old "anyone can read/edit/delete any shop's customers" rules could not be scoped without an identity. A password or per-login email check was rejected as too much friction for a loyalty card; the phone is the proof. Rejoin-by-contact was itself a hole (anyone could type someone else's number), so it became a hint for staff instead of a key. Breaking app versions before 1.0.3 is acceptable because every current customer is test data. Full design and decisions: `anon-customers-design.md` | §3 Option B |
+| 2026-10-30 | Bot check is Cloudflare **Turnstile** on anonymous sign-in and staff password sign-in, shipped in its own release (1.0.4) after the 1.0.3 go-live; the widget allows hostname `localhost` instead of giving the Android app its own hostname | Turnstile is free and mostly invisible (a checkbox only for suspicious traffic), and Supabase supports it natively. Supabase's CAPTCHA setting covers every sign-in, so staff sign-in sends a token too. Allowing `localhost` keeps the Android WebView origin (`https://localhost`) unchanged; a new origin would wipe every phone's saved login, and with it the card. The trade-off is a weaker hostname restriction; the challenge itself is the protection. A separate release keeps 1.0.3 in review instead of resubmitting | §3 Option B |
 
 ## Deviations from the original strategy doc
 

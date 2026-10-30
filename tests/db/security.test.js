@@ -7,6 +7,7 @@ import {
   admin,
   anonClient,
   cleanup,
+  ensureStaffAccount,
   getTenantIds,
   readCustomer,
   readCustomerByCode,
@@ -165,6 +166,23 @@ describe("customers — not signed in", () => {
     const move = await anon.rpc("move_card", { old_code: "A", new_code: "B" });
     expect(check.error).not.toBeNull();
     expect(move.error).not.toBeNull();
+  });
+});
+
+describe("bot check (CAPTCHA)", () => {
+  // Needs CAPTCHA switched on in the scratch project (see tests/README.md).
+  it("a phone account can't be created without passing the bot check", async () => {
+    const { data, error } = await anonClient().auth.signInAnonymously();
+    if (data.user) await admin.auth.admin.deleteUser(data.user.id); // don't leak it if the check is off
+    expect(error?.message).toMatch(/captcha/i);
+    expect(data.user).toBeNull();
+  });
+
+  it("staff can't sign in without passing the bot check, even with the right password", async () => {
+    const { email, password } = await ensureStaffAccount("rls-test-captcha", "hugo", tenants.hugo);
+    const { data, error } = await anonClient().auth.signInWithPassword({ email, password });
+    expect(error?.message).toMatch(/captcha/i);
+    expect(data.session).toBeNull();
   });
 });
 

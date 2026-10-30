@@ -1,10 +1,17 @@
 // Staff sign-in for the owner dashboard (Supabase Auth email + password).
 import { supabase } from "../supabaseClient";
+import { getCaptchaToken } from "./captcha";
 
-// True on success, false for a wrong email/password or any other error.
+// True on success, false for a wrong email/password, a failed bot check or any
+// other error.
 export async function signInStaff(email, password) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  return !error;
+  try {
+    const captchaToken = await getCaptchaToken();
+    const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
+    return !error;
+  } catch {
+    return false;
+  }
 }
 
 export async function getStaffSession() {
