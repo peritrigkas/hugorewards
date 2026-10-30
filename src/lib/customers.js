@@ -53,19 +53,59 @@ export async function moveCard(oldCode, newCode) {
   return error ? error.message : null;
 }
 
-// Calls onChange whenever a card owned by this account is added, changed or
-// moved onto it. Returns an unsubscribe function.
-export function subscribeToMyCustomer(userId, onChange) {
-  const channel = supabase
-    .channel(`customer-${userId}`)
-    .on("postgres_changes", { event: "*", schema: "public", table: "customers", filter: `user_id=eq.${userId}` }, () => onChange())
-    .subscribe();
-  return () => supabase.removeChannel(channel);
+// Live changes to the customers table (optionally filtered), calling
+// onChange after each. Built not to miss any:
+// - Each channel gets its own name: Supabase hands back an existing channel
+//   with the same name, and a replacement is opened before the old one closes.
+// - Once the channel is connected, and whenever the app comes back to the
+//   foreground, onChange runs to catch up on anything missed meanwhile.
+// - A channel that fails, times out or closes is replaced after a short wait.
+// Returns an unsubscribe function.
+const RESUBSCRIBE_DELAY_MS = 3000;
+let channelCount = 0;
+
+function subscribeToCustomers(filter, onChange) {
+  let channel = null;
+  let retryTimer = null;
+  let stopped = false;
+
+  const connect = () => {
+    const thisChannel = supabase
+      .channel(`customers-${++channelCount}-${Date.now()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers", ...(filter && { filter }) }, () => onChange());
+    channel = thisChannel;
+    thisChannel.subscribe((status) => {
+      if (stopped || thisChannel !== channel) return;
+      if (status === "SUBSCRIBED") onChange();
+      else if (!retryTimer) retryTimer = setTimeout(reconnect, RESUBSCRIBE_DELAY_MS);
+    });
+  };
+
+  const reconnect = () => {
+    retryTimer = null;
+    const old = channel;
+    connect();
+    supabase.removeChannel(old);
+  };
+
+  const onForeground = () => {
+    if (document.visibilityState === "visible") onChange();
+  };
+
+  connect();
+  document.addEventListener("visibilitychange", onForeground);
+  return () => {
+    stopped = true;
+    clearTimeout(retryTimer);
+    document.removeEventListener("visibilitychange", onForeground);
+    supabase.removeChannel(channel);
+  };
 }
+
+// Calls onChange whenever a card owned by this account is added, changed or
+// gets stamps moved onto it. Returns an unsubscribe function.
+export const subscribeToMyCustomer = (userId, onChange) => subscribeToCustomers(`user_id=eq.${userId}`, onChange);
 
 // Calls onChange after any insert, update or delete on customers.
 // Returns an unsubscribe function.
-export function subscribeToAllCustomers(onChange) {
-  const channel = supabase.channel("owner-customers").on("postgres_changes", { event: "*", schema: "public", table: "customers" }, onChange).subscribe();
-  return () => supabase.removeChannel(channel);
-}
+export const subscribeToAllCustomers = (onChange) => subscribeToCustomers(null, onChange);

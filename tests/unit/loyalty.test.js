@@ -4,9 +4,10 @@ import {
 } from "../../src/lib/loyalty.js";
 
 describe("makeCustomerCode", () => {
-  it("is the prefix, a dash and 5 uppercase base-36 characters", () => {
-    expect(makeCustomerCode("HUGO", () => 0.123456789)).toBe("HUGO-4FZZZ");
-    expect(makeCustomerCode("DAISY", () => 0.0001)).toBe("DAISY-004NY");
+  it("is the prefix, a dash and 5 random digits or capital letters", () => {
+    const draws = [0, 0.1, 0.5, 0.99, 0.999999];
+    expect(makeCustomerCode("HUGO", () => draws.shift())).toBe("HUGO-03IZZ");
+    expect(makeCustomerCode("DAISY", () => 0.0001)).toBe("DAISY-00000");
   });
 
   it("produces codes the staff scanner accepts", () => {
@@ -15,11 +16,10 @@ describe("makeCustomerCode", () => {
     }
   });
 
-  // Known bug (refactor-plan.md, "Bugs found"): a "round" random number has
-  // fewer than 5 base-36 digits, giving a short code the scanner rejects.
-  // Vanishingly rare with Math.random, but possible. Change to `it` once fixed.
-  it.fails("always produces 5 characters, even for a short random value [KNOWN BUG]", () => {
-    expect(makeCustomerCode("HUGO", () => 0.5)).toMatch(customerCodePattern("HUGO"));
+  // Was a bug (refactor-plan.md, "Bugs found"): codes came from one random
+  // number's base-36 digits, so a "round" value like 0.5 gave HUGO-I.
+  it.each([0, 0.5, 0.25, 0.9999999])("always produces 5 characters, even for a round random value (%s)", (value) => {
+    expect(makeCustomerCode("HUGO", () => value)).toMatch(customerCodePattern("HUGO"));
   });
 });
 

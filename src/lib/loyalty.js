@@ -1,8 +1,14 @@
 // Loyalty-card rules. Pure functions (no config, database or storage access)
 // so they can be unit-tested; callers pass in the tenant's prefix and stamp count.
 
+const CODE_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const CODE_LENGTH = 5;
+
+// The prefix, a dash and 5 random digits/capital letters, e.g. HUGO-2XAZK.
 export function makeCustomerCode(prefix, random = Math.random) {
-  return `${prefix}-${random().toString(36).slice(2, 7).toUpperCase()}`;
+  let suffix = "";
+  for (let i = 0; i < CODE_LENGTH; i++) suffix += CODE_CHARS[Math.floor(random() * CODE_CHARS.length)];
+  return `${prefix}-${suffix}`;
 }
 
 export const customerCodePattern = (prefix) => new RegExp(`^${prefix}-[0-9A-Z]{5}$`);
