@@ -40,6 +40,15 @@ export const must = ({ data, error }) => {
   return data;
 };
 
+// Days in the shop's time zone (the scratch shops use the default,
+// Europe/London), as YYYY-MM-DD: shopDay(0) is today, shopDay(-1) yesterday.
+export function shopDay(offset = 0) {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
+  const day = new Date(`${today}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + offset);
+  return day.toISOString().slice(0, 10);
+}
+
 export async function getTenantIds() {
   const rows = must(await admin.from("tenants").select("id, slug").in("slug", ["hugo", "daisy"]));
   const ids = Object.fromEntries(rows.map((r) => [r.slug, r.id]));

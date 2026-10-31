@@ -5,7 +5,9 @@ import { expect, test } from "@playwright/test";
 import { randomBytes } from "node:crypto";
 import { clientConfig } from "../../src/client.config.js";
 import { admin, must } from "../support/scratch.js";
-import { joinAsCustomer, signInAsStaff, staffRow, staffRowButton, staffStampLine } from "./support.js";
+import {
+  cardLineButton, cardLineStamps, joinAsCustomer, openCustomer, openLoyaltyCards, signInAsStaff, staffRow, staffRowStamps, typeCode,
+} from "./support.js";
 
 const smokeContact = (slug) => `smoke-${randomBytes(3).toString("hex")}-${slug}@test.local`;
 
@@ -16,7 +18,7 @@ async function newPhone(browser, testInfo) {
   return { context, page: await context.newPage() };
 }
 
-test("customer joins, gets stamped, logs out and back in, gets their stamps on a new phone, redeems and deletes", async ({ browser, page }, testInfo) => {
+test("customer joins, gets stamped, logs out and back in, gets their stamps on a new phone, redeems, sees it in past cards and deletes", async ({ browser, page }, testInfo) => {
   const slug = testInfo.project.name;
   const contact = smokeContact(slug);
   let code;
@@ -46,17 +48,15 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
 
   // Staff use their own device: a separate browser context.
   const { context: staffContext, page: staff } = await newPhone(browser, testInfo);
-  let stampLine = staffStampLine(staff, code);
 
   await test.step("staff signs in and stamps the card by typing its code", async () => {
     await signInAsStaff(staff, slug);
-    await expect(stampLine).toHaveText(/^0 \/ \d+ stamps/);
-    stampsForReward = Number((await stampLine.textContent()).match(/\/ (\d+) stamps/)[1]);
-    const codeInput = staff.getByPlaceholder(/Type a code/);
-    await codeInput.fill(code);
-    await codeInput.press("Enter");
+    const rowStamps = staffRowStamps(staff, code);
+    await expect(rowStamps).toContainText(`${code} · Main 0/`);
+    stampsForReward = Number((await rowStamps.textContent()).match(/Main 0\/(\d+)/)[1]);
+    await typeCode(staff, code);
     await expect(staff.getByText("✓ Added a stamp for Smoke Renamed")).toBeVisible();
-    await expect(stampLine).toHaveText(`1 / ${stampsForReward} stamps · ${code}`);
+    await expect(rowStamps).toContainText(`${code} · Main 1/${stampsForReward}`);
   });
 
   await test.step("customer's card updates live", async () => {
@@ -89,12 +89,13 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
   });
 
   await test.step("staff see the possible earlier card on the new card only, and add its stamps there", async () => {
-    const newRow = staffRow(staff, newCode);
-    await expect(newRow.getByText("Possible earlier card:")).toContainText(`Smoke Renamed · 1 stamps · ${code}`);
-    await expect(staffRow(staff, code).getByText("Possible earlier card:")).toHaveCount(0);
-    await newRow.getByRole("button", { name: "Add its stamps here" }).click();
-    await expect(staffRow(staff, code)).toHaveCount(0);
-    await expect(staffStampLine(staff, newCode)).toHaveText(`1 / ${stampsForReward} stamps · ${newCode}`);
+    await expect(staffRow(staff, newCode).getByText("Earlier card?")).toBeVisible();
+    await expect(staffRow(staff, code).getByText("Earlier card?")).toHaveCount(0);
+    await openCustomer(staff, newCode);
+    await expect(staff.getByText("Possible earlier card:")).toContainText(`Smoke Renamed · 1 stamps · ${code}`);
+    await staff.getByRole("button", { name: "Add its stamps here" }).click();
+    await expect(staff.getByText("Possible earlier card:")).toHaveCount(0);
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`1 / ${stampsForReward} stamps`);
   });
 
   await test.step("the new phone keeps its own code and now has the old card's stamps", async () => {
@@ -106,7 +107,6 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
     await phone2.getByTestId("nav-home").click();
   });
   code = newCode;
-  stampLine = staffStampLine(staff, code);
 
   await test.step("the old phone no longer has the card", async () => {
     await page.reload();
@@ -114,16 +114,25 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
   });
 
   await test.step("staff fill the card and redeem the reward", async () => {
+    const stampLine = cardLineStamps(staff, "Main card");
+    const button = cardLineButton(staff, "Main card");
     for (let n = 2; n <= stampsForReward; n++) {
-      await staffRowButton(staff, code).click();
-      await expect(stampLine).toHaveText(`${n} / ${stampsForReward} stamps · ${code}`);
+      await button.click();
+      await expect(stampLine).toHaveText(`${n} / ${stampsForReward} stamps`);
     }
-    await expect(staffRowButton(staff, code)).toHaveText("Redeem");
-    await staffRowButton(staff, code).click();
-    await expect(stampLine).toHaveText(`0 / ${stampsForReward} stamps · ${code}`);
+    await expect(button).toHaveText("Redeem");
+    await button.click();
+    await expect(staff.getByText("✓ Reward redeemed")).toBeVisible();
+    await expect(stampLine).toHaveText(`0 / ${stampsForReward} stamps`);
     await expect(phone2.getByText(`0/${stampsForReward}`, { exact: true })).toBeVisible();
   });
   await staffContext.close();
+
+  await test.step("the redeemed card is in the customer's past cards", async () => {
+    await openLoyaltyCards(phone2, "Past cards");
+    await expect(phone2.getByTestId("past-card")).toHaveCount(1);
+    await expect(phone2.getByTestId("past-card")).toContainText("REDEEMED");
+  });
 
   await test.step("delete the account", async () => {
     await phone2.getByTestId("open-account").click();

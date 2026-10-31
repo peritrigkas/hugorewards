@@ -16,8 +16,8 @@ import { useSecretTap } from "./useSecretTap";
 
 export function CustomerApp({ onStaffAccess }) {
   const {
-    customer, loading, loggedOut, staffOnDevice, hasEarlierCard,
-    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice,
+    customer, loading, loggedOut, staffOnDevice, hasEarlierCard, today, promoCards, pastCards, newPromo,
+    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice, dismissNewPromo,
   } = useCustomer();
   const [screen, setScreen] = useState("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -61,9 +61,11 @@ export function CustomerApp({ onStaffAccess }) {
     <div style={{ background: "var(--c-cream)", minHeight: "100vh", maxWidth: 420, margin: "0 auto", fontFamily: "Inter, sans-serif", position: "relative" }}>
       <TopBar onBack={subScreen ? handleBack : null} onMenu={() => setDrawerOpen(true)} onSecretTap={handleSecretTap} onAccount={() => setScreen("account")} />
       {hasEarlierCard && <EarlierCardBanner code={customer.code} />}
-      {screen === "home" && <HomeScreen customer={customer} goToRewards={() => setScreen("rewards")} />}
+      {screen === "home" && (
+        <HomeScreen customer={customer} promoCards={promoCards} today={today} newPromo={newPromo} onDismissNewPromo={dismissNewPromo} goToRewards={() => setScreen("rewards")} />
+      )}
       {screen === "rewards" && <RewardsHome goToCards={() => setScreen("cards")} goToGifts={() => setScreen("gifts")} />}
-      {screen === "cards" && <LoyaltyCardDetail customer={customer} />}
+      {screen === "cards" && <LoyaltyCardDetail customer={customer} promoCards={promoCards} pastCards={pastCards} today={today} />}
       {screen === "gifts" && <GiftsView />}
       {screen === "scan" && <ScanCodeScreen customer={customer} />}
       {screen === "menu" && <MenuScreen />}

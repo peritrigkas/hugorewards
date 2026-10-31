@@ -1,15 +1,27 @@
 import { useEffect, useState } from "react";
 import { clientConfig } from "../client.config";
+import { listHistory, listPromos, listPromoStamps } from "../lib/cards";
 import {
   contactHasOtherCard, createCustomer, deleteCustomer, getMyCustomer, subscribeToMyCustomer, updateCustomerDetails,
 } from "../lib/customers";
 import { ensureCustomerSession, getDeviceSession, isStaffSession } from "../lib/customerAuth";
 import { isLoggedOut, setLoggedOut } from "../lib/loggedOut";
 import { makeCustomerCode } from "../lib/loyalty";
+import { activePromoCards, pastCards, runningPromo, shopToday } from "../lib/promos";
+import { hasSeenPromo, markPromoSeen } from "../lib/seenPromos";
 import { signOutStaff } from "../lib/staffAuth";
 
 // The branded loading screen always shows for at least this long on launch.
 const MIN_LOADING_MS = 3000;
+
+const NO_CARDS = { promos: [], promoStamps: [], history: [] };
+
+// The shop's promos and this customer's promo stamps and redeemed cards. A
+// failed read shows as none, so the main card still works.
+async function loadCards() {
+  const [promos, promoStamps, history] = await Promise.all([listPromos(clientConfig.tenantId), listPromoStamps(), listHistory()]);
+  return { promos: promos ?? [], promoStamps: promoStamps ?? [], history: history ?? [] };
+}
 
 // The card belonging to this device's (anonymous) account, kept in sync with
 // the database while the app is open. Actions resolve to true/false so screens
@@ -23,11 +35,17 @@ export function useCustomer() {
   const [staffOnDevice, setStaffOnDevice] = useState(false);
   // Another card in this shop has the same contact: likely this customer's old phone.
   const [hasEarlierCard, setHasEarlierCard] = useState(false);
+  const [cards, setCards] = useState(NO_CARDS);
+  const [, setSeenChanged] = useState(0);
 
   const refresh = async () => {
     const card = await getMyCustomer(clientConfig.tenantId);
     setCustomer(card);
-    setHasEarlierCard(card ? await contactHasOtherCard(clientConfig.tenantId, card.contact) : false);
+    const [earlier, loaded] = card
+      ? await Promise.all([contactHasOtherCard(clientConfig.tenantId, card.contact), loadCards()])
+      : [false, NO_CARDS];
+    setHasEarlierCard(earlier);
+    setCards(loaded);
   };
 
   const load = async () => {
@@ -45,7 +63,8 @@ export function useCustomer() {
     Promise.all([load(), minDelay]).finally(() => setLoading(false));
   }, []);
 
-  // Live stamps, and the card staff move onto this phone from an old one.
+  // Live stamps (promo stamps and redemptions touch the card too), and stamps
+  // staff move onto this phone from an old one.
   useEffect(() => {
     if (!userId) return;
     return subscribeToMyCustomer(userId, refresh);
@@ -60,7 +79,9 @@ export function useCustomer() {
     logBackIn();
     setUserId(session.user.id);
     setCustomer(data);
-    setHasEarlierCard(await contactHasOtherCard(clientConfig.tenantId, contact));
+    const [earlier, loaded] = await Promise.all([contactHasOtherCard(clientConfig.tenantId, contact), loadCards()]);
+    setHasEarlierCard(earlier);
+    setCards(loaded);
     return true;
   };
 
@@ -89,6 +110,7 @@ export function useCustomer() {
     }
     setCustomer(null);
     setHasEarlierCard(false);
+    setCards(NO_CARDS);
     return true;
   };
 
@@ -99,8 +121,20 @@ export function useCustomer() {
     await load();
   };
 
+  const today = shopToday(clientConfig.timezone);
+  const stampsByPromo = Object.fromEntries(cards.promoStamps.map((s) => [s.promo_id, s.stamps]));
+  const promoCards = activePromoCards(cards.promos, stampsByPromo, today);
+  const past = pastCards({ history: cards.history, promos: cards.promos, stampsByPromo, today, timeZone: clientConfig.timezone });
+  // The running promo, until the customer dismisses its "New" banner.
+  const current = runningPromo(cards.promos, today);
+  const newPromo = current && !hasSeenPromo(current.id) ? current : null;
+  const dismissNewPromo = () => {
+    markPromoSeen(newPromo.id);
+    setSeenChanged((n) => n + 1);
+  };
+
   return {
-    customer, loading, loggedOut, staffOnDevice, hasEarlierCard,
-    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice,
+    customer, loading, loggedOut, staffOnDevice, hasEarlierCard, today, promoCards, pastCards: past, newPromo,
+    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice, dismissNewPromo,
   };
 }

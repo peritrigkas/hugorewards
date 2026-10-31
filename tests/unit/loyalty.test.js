@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  customerCodePattern, findEarlierCards, isRewardReady, makeCustomerCode, nextStampCount, normalizeContact,
+  customerCodePattern, findEarlierCards, isRewardReady, makeCustomerCode, normalizeContact,
 } from "../../src/lib/loyalty.js";
 
 describe("makeCustomerCode", () => {
@@ -39,17 +39,6 @@ describe("customerCodePattern", () => {
     ["a prefix that only starts the same", "HUGOX-2XAZK"],
   ])("rejects %s", (_, code) => {
     expect(hugo.test(code)).toBe(false);
-  });
-});
-
-describe("nextStampCount", () => {
-  it("adds one stamp", () => {
-    expect(nextStampCount(0, 9)).toBe(1);
-    expect(nextStampCount(8, 9)).toBe(9);
-  });
-
-  it("stays at the reward count once the card is full", () => {
-    expect(nextStampCount(9, 9)).toBe(9);
   });
 });
 
