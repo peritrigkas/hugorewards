@@ -40,11 +40,6 @@ export async function listCustomers() {
   return error ? null : data;
 }
 
-export async function setStamps(code, stamps) {
-  const { error } = await supabase.from("customers").update({ stamps }).eq("code", code);
-  return !error;
-}
-
 // Staff: adds the old card's stamps to the new card (the one on the customer's
 // phone now) and removes the old card. Resolves to null on success, or the
 // reason it was refused.

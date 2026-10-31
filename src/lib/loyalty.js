@@ -13,9 +13,6 @@ export function makeCustomerCode(prefix, random = Math.random) {
 
 export const customerCodePattern = (prefix) => new RegExp(`^${prefix}-[0-9A-Z]{5}$`);
 
-// A full card stays full until staff redeem it.
-export const nextStampCount = (stamps, stampsForReward) => Math.min(stamps + 1, stampsForReward);
-
 export const isRewardReady = (stamps, stampsForReward) => stamps >= stampsForReward;
 
 // Ignores case, spaces, dashes, dots and brackets, so "07827 421616" matches

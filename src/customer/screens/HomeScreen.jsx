@@ -4,6 +4,7 @@ import { clientConfig } from "../../client.config";
 import { STAMPS_FOR_REWARD } from "../../loyaltySettings";
 import { BrandMark } from "../../components/BrandMark";
 import { STAMP_ICONS } from "../../components/StampCard";
+import { NewPromoBanner, PromoCard } from "../PromoCards";
 
 // Hugo keeps its ☕ / 🐮 emoji; other tenants get their stamp icon and logo.
 const StatStampIcon = clientConfig.loyalty.stampIcon === "cow" ? null : STAMP_ICONS[clientConfig.loyalty.stampIcon] || Star;
@@ -18,7 +19,7 @@ function StatBlock({ value, label, emoji }) {
   );
 }
 
-function Greeting({ customer }) {
+function Greeting({ customer, cardCount }) {
   return (
     <div style={{ padding: "28px 20px 20px", textAlign: "center" }}>
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "var(--c-dark)", marginBottom: 4 }}>
@@ -32,7 +33,7 @@ function Greeting({ customer }) {
         <div style={{ width: 1, background: "var(--c-divider)" }} />
         <StatBlock value="0" label="Gift List" emoji="🎁" />
         <div style={{ width: 1, background: "var(--c-divider)" }} />
-        <StatBlock value="1" label="Cards" emoji={clientConfig.mark === "cow" && !clientConfig.logoUrl ? "🐮" : <BrandMark size={22} />} />
+        <StatBlock value={cardCount} label="Cards" emoji={clientConfig.mark === "cow" && !clientConfig.logoUrl ? "🐮" : <BrandMark size={22} />} />
       </div>
     </div>
   );
@@ -144,10 +145,23 @@ function FollowUs() {
   );
 }
 
-export function HomeScreen({ customer, goToRewards }) {
+// The running promo's card (and any full card still to claim from an ended
+// one), right under the greeting where it's seen.
+function PromoCards({ cards, today }) {
+  if (cards.length === 0) return null;
+  return (
+    <div style={{ padding: "0 20px", marginBottom: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+      {cards.map((card) => <PromoCard key={card.promo.id} card={card} today={today} />)}
+    </div>
+  );
+}
+
+export function HomeScreen({ customer, promoCards, today, newPromo, onDismissNewPromo, goToRewards }) {
   return (
     <div>
-      <Greeting customer={customer} />
+      {newPromo && <NewPromoBanner promo={newPromo} onDismiss={onDismissNewPromo} />}
+      <Greeting customer={customer} cardCount={1 + promoCards.length} />
+      <PromoCards cards={promoCards} today={today} />
       <HeroBanner />
       <SwirlDivider />
       <EarnRewardsCard onView={goToRewards} />

@@ -1,8 +1,17 @@
 # Promo cards and past cards: design
 
 Status: **agreed** (2026-10-30). Database built and tested on scratch
-(`supabase-promo-cards.sql`, `tests/db/promos.test.js`); not yet on live.
-App screens not built yet.
+(`supabase-promo-cards.sql`, `tests/db/promos.test.js`); applied to live
+2026-10-31.
+App screens built (2026-10-31); not yet released.
+
+Built as designed, plus:
+- Scanning a **full** card opens the customer view instead of stamping, so
+  staff can redeem it there.
+- The staff list marks a card that has a possible earlier card ("Earlier
+  card?"); the hint and its button are in the customer view.
+- "End now" makes yesterday the promo's last day (and its start, if it
+  started today), so no more stamps today; full cards can still be claimed.
 
 ## Summary
 

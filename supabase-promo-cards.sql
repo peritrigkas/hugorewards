@@ -1,7 +1,8 @@
 -- Promo cards and past cards (design: developent-docs/promo-cards-design.md).
 --
 -- Applied to the scratch project 2026-10-30 as migrations `promo_cards` and
--- `promo_cards_policy_initplan`. Tests: tests/db/promos.test.js.
+-- `promo_cards_policy_initplan`, and to live 2026-10-31 as `promo_cards`.
+-- Tests: tests/db/promos.test.js.
 --
 -- Additive: apps 1.0.3 and 1.0.4 keep working. They don't know about promos,
 -- and their Redeem still resets customers.stamps directly, without a history

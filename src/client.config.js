@@ -32,6 +32,9 @@ export const clientConfig = {
     errorBorder: "#E3B8B8",
   },
 
+  // Promo start and end dates are days in this time zone.
+  timezone: "Europe/London",
+
   joinTagline: "Join up — buy 9, the 10th's on the cow.",
   joinReturningNote: "Had a card on another phone? Staff can move it to this one.",
   greetingSubtitle: "Keep on mooing for more rewards!",
@@ -44,7 +47,8 @@ export const clientConfig = {
     cardsPromoBody: "Get a stamp on your Hugo card for every coffee — buy 9, and the 10th's on the cow.",
     // Icon on each stamp of the loyalty card: "cow" (Hugo's cow card, 9-stamp
     // cards only) or one of bean, coffee, croissant, cookie, ice-cream, leaf,
-    // flower, scissors, dumbbell, paw, heart, star — see STAMP_ICONS in App.jsx.
+    // flower, scissors, dumbbell, paw, heart, star, cake, sandwich, salad,
+    // pizza, soda — see STAMP_ICONS in components/StampCard.jsx.
     // Anything else draws plain filled circles.
     stampIcon: "cow",
     progressLabel: (n) => `Collect ${n} stamps for a free coffee`,
