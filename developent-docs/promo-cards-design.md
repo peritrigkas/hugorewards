@@ -1,7 +1,8 @@
 # Promo cards and past cards: design
 
 Status: **agreed** (2026-10-30). Database built and tested on scratch
-(`supabase-promo-cards.sql`, `tests/db/promos.test.js`); not yet on live.
+(`supabase-promo-cards.sql`, `tests/db/promos.test.js`); applied to live
+2026-10-31.
 App screens built (2026-10-31); not yet released.
 
 Built as designed, plus:

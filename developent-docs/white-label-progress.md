@@ -101,8 +101,8 @@ client's app ships.
     "Scans add to" switch and Promo page; stamping and redeeming through
     `add_stamp` / `redeem` (2026-10-31). Needs the SQL on live first: staff
     stamping uses `add_stamp`
-  - [ ] Apply the SQL to live (additive, safe for 1.0.3/1.0.4), then release
-    the app as 1.0.5 or later
+  - [x] SQL applied to live 2026-10-31 (migration `promo_cards`)
+  - [ ] Release the app as 1.0.5 (versionCode 6)
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their
   logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
   `config.loyalty.stampIcon`, and override the cow-themed copy
