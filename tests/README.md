@@ -127,18 +127,20 @@ The browser emulates a Pixel 7.
   2. The QR code shows, and the card is saved under the right shop with 0
      stamps and linked to the phone's account (database check).
   3. Edit the name.
-  4. Staff stamp the card by typing its code.
+  4. Staff stamp the card by typing its code; the list line shows it.
   5. The customer's card updates live.
   6. Log out (still logged out after reopening the app), then log back in:
      same card, same stamps.
   7. **New phone:** joining with the same contact (different capitalisation)
      shows the "already have a card" banner.
-  8. Staff see "Possible earlier card" on the new card only, and tap **Add
-     its stamps here**. The new phone keeps its own code and gets the old
+  8. The new card's list line is marked "Earlier card?" (the old one isn't).
+     Staff open it, see "Possible earlier card" and tap **Add its stamps
+     here**. The new phone keeps its own code and gets the old
      card's stamps live; the old card is removed, so the old phone no longer
      has a card.
-  9. Staff fill the card and redeem the reward.
-  10. Delete the account (database check that the row is gone).
+  9. Staff fill the card from the customer view and redeem the reward.
+  10. The redeemed card shows in the customer's **Past cards**.
+  11. Delete the account (database check that the row is gone).
 - **Secret staff entrance:** 7 taps on the shop name open the PIN prompt; a
   wrong PIN keeps it open, the right one (bundled `staffPin`) leads to staff
   sign-in, which warns that this device holds a customer card.
@@ -150,12 +152,31 @@ The browser emulates a Pixel 7.
   card (same code).
 - **Staff scanner** rejects a code from the other shop.
 
+`promos.spec.js`, **promo journey:**
+  1. Staff create a promo on the Promos page (starts today, 2 stamps).
+  2. A customer sees the new-promo banner and the promo card; the banner
+     stays dismissed after reopening the app.
+  3. With "Scans add to" on the promo, a scan stamps the promo card (live on
+     the phone).
+  4. With "Ask me", a scan opens the customer view (after the scanner's
+     4-second repeat guard).
+  5. Staff stamp both cards from the customer view and redeem the full promo
+     card; the customer's promo card starts again and Past cards shows it
+     REDEEMED.
+  6. With an ended promo (set up in the database): a full card is still
+     claimable and staff redeem it; an unfinished card from an older promo
+     shows EXPIRED.
+
+A shop runs one promo at a time, so a promo made by hand on scratch that's
+running today makes the promo journey fail; delete it first. Smoke promos
+are named "Smoke ..." and removed in cleanup.
+
 Each "phone" (customer, new phone, staff device) is a **separate browser
 context** with its own anonymous account or staff login. A device holds one
 login at a time, just like a real phone.
 
 Files:
-- `journey.spec.js`: the tests, as named `test.step`s.
+- `journey.spec.js`, `promos.spec.js`: the tests, as named `test.step`s.
 - `support.js`: joining as a customer, staff sign-in, locators for the staff
   customer list, cleanup.
 - `global-setup.js` / `global-teardown.js`: clean up leftovers, create the

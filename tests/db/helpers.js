@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { it } from "vitest";
-import { admin, anonClient, CAPTCHA_TEST_TOKEN, ensureStaffAccount, must } from "../support/scratch.js";
+import { admin, anonClient, CAPTCHA_TEST_TOKEN, ensureStaffAccount, must, shopDay } from "../support/scratch.js";
 
-export { admin, anonClient, ensureStaffAccount, getTenantIds } from "../support/scratch.js";
+export { admin, anonClient, ensureStaffAccount, getTenantIds, shopDay } from "../support/scratch.js";
 
 // Every customer these tests create gets a code with this prefix, so cleanup
 // also removes leftovers from crashed runs.
@@ -45,15 +45,6 @@ export async function readCustomer(id) {
 
 export async function readCustomerByCode(code) {
   return must(await admin.from("customers").select("*").eq("code", code).maybeSingle());
-}
-
-// Days in the shop's time zone (the scratch shops use the default,
-// Europe/London), as YYYY-MM-DD: shopDay(0) is today, shopDay(-1) yesterday.
-export function shopDay(offset = 0) {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
-  const day = new Date(`${today}T00:00:00Z`);
-  day.setUTCDate(day.getUTCDate() + offset);
-  return day.toISOString().slice(0, 10);
 }
 
 // Every promo these tests create is named with this prefix, so cleanup also

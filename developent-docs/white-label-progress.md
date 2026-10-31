@@ -97,9 +97,10 @@ client's app ships.
 - [ ] **Promo cards and past cards** (`developent-docs/promo-cards-design.md`)
   - [x] Database: `supabase-promo-cards.sql`, tested on scratch 2026-10-30
     (`tests/db/promos.test.js`)
-  - [ ] App: customer promo card and Past cards tab; staff customer view,
+  - [x] App: customer promo card and Past cards tab; staff customer view,
     "Scans add to" switch and Promo page; stamping and redeeming through
-    `add_stamp` / `redeem`
+    `add_stamp` / `redeem` (2026-10-31). Needs the SQL on live first: staff
+    stamping uses `add_stamp`
   - [ ] Apply the SQL to live (additive, safe for 1.0.3/1.0.4), then release
     the app as 1.0.5 or later
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their

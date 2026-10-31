@@ -11,7 +11,9 @@ const CUSTOMER_CODE_RE = customerCodePattern(clientConfig.loyalty.codePrefix);
 // of the same code within this window instead of double-stamping.
 const RESCAN_COOLDOWN_MS = 4000;
 
-export function ScanPanel({ customers, onFoundCode }) {
+// onFoundCode resolves to { message }: shown briefly, or nothing when the
+// code opened the customer view instead.
+export function ScanPanel({ onFoundCode }) {
   const isNative = Capacitor.isNativePlatform();
   const [scanning, setScanning] = useState(false);
   const [supported, setSupported] = useState(true);
@@ -27,8 +29,9 @@ export function ScanPanel({ customers, onFoundCode }) {
   const lastScanRef = useRef({ code: "", at: 0 });
 
   const handleCode = async (raw) => {
-    const result = await onFoundCode(raw.trim());
-    setMessage(result.ok ? `✓ Added a stamp for ${result.name}` : result.message);
+    const { message: result } = await onFoundCode(raw.trim());
+    if (!result) return;
+    setMessage(result);
     setTimeout(() => setMessage(""), 2500);
   };
 
@@ -152,7 +155,7 @@ export function ScanPanel({ customers, onFoundCode }) {
     return (
       <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid var(--c-border)", borderRadius: 18, padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", margin: 0 }}>Scan to add a stamp</h3>
+          <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", margin: 0 }}>Scan a customer's code</h3>
           <button onClick={startNativeScan} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Start scan</button>
         </div>
         <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginBottom: 12 }}>
@@ -180,7 +183,7 @@ export function ScanPanel({ customers, onFoundCode }) {
   return (
     <div style={{ maxWidth: 480, margin: "0 auto 28px", background: "#fff", border: "1px solid var(--c-border)", borderRadius: 18, padding: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", margin: 0 }}>Scan to add a stamp</h3>
+        <h3 style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 18, color: "var(--c-dark)", margin: 0 }}>Scan a customer's code</h3>
         {!scanning ? (
           <button onClick={startBrowserScan} style={{ background: "var(--c-dark)", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Start scan</button>
         ) : (
