@@ -117,6 +117,10 @@ client's app ships.
     the salon's logo (round crop for icon/splash; in-app `logoUrl` in the
     `tenant-assets` bucket), address "12 High Street", hours one row per day
     (Mon closed, Tue–Sat 10am – 7pm, Sun 11am – 5pm), birthday treat kept
+  - [x] Photos (2026-11-01): home banners, the three service tiles and four of
+    the five services (not Pedicures), cropped to each slot as WebP
+    (`clients/prettypretty/photos/web/`, ~380 KB total) and served from
+    `tenant-assets/prettypretty/`
   - [ ] Still placeholder: phone (020 7946 0123 is in Ofcom's drama range),
     postcode "London AB1 2CD", social links; time zone assumed `Europe/London`
   - [ ] Staff account for the salon, mapped to the tenant in `staff_tenant`

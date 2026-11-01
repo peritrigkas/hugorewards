@@ -1,0 +1,2 @@
+# Originals stay local; the cropped web versions in web/ are what the app uses.
+*.png
