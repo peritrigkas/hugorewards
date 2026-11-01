@@ -113,9 +113,12 @@ client's app ships.
     trigger never fills in a tenant
   - [x] `clients/prettypretty/` with a **placeholder** logo; `build-client` on
     Node 22 and a debug APK (`com.prettypretty.rewards`) compile
-  - [ ] Replace mock details: address, hours and phone are made up (phone is in
-    Ofcom's drama range); logo is a placeholder "PP" monogram; no in-app
-    `logoUrl` yet; confirm the time zone (`Europe/London`) and the birthday treat
+  - [x] Real details (2026-11-01, [#35](https://github.com/peritrigkas/hugorewards/pull/35)):
+    the salon's logo (round crop for icon/splash; in-app `logoUrl` in the
+    `tenant-assets` bucket), address "12 High Street", hours one row per day
+    (Mon closed, Tue–Sat 10am – 7pm, Sun 11am – 5pm), birthday treat kept
+  - [ ] Still placeholder: phone (020 7946 0123 is in Ofcom's drama range),
+    postcode "London AB1 2CD", social links; time zone assumed `Europe/London`
   - [ ] Staff account for the salon, mapped to the tenant in `staff_tenant`
   - [ ] Install on a phone: name, icon, splash, join, stamp, redeem
   - [ ] Play Console listing, signed AAB, release
