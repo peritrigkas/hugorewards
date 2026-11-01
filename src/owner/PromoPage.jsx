@@ -113,7 +113,7 @@ export function PromoPage({ promos, promoStamps, history, today, onSave, onDelet
   const [editing, setEditing] = useState(null);
   const { running, upcoming, past } = groupPromos(promos, today);
   const inUse = (id) => promoStamps.some((s) => s.promo_id === id) || history.some((h) => h.promo_id === id);
-  const redeemedCount = (id) => history.filter((h) => h.promo_id === id).length;
+  const redeemedCount = (id) => history.filter((h) => h.promo_id === id && h.outcome === "redeemed").length;
 
   const section = (title, list) => list.length > 0 && (
     <>

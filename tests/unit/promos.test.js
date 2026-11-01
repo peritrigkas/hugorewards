@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  activePromoCards, addDays, claimUntil, daysBetween, endNowDates, formatDay, groupPromos, pastCards, promoFormError,
+  activePromoCards, addDays, claimUntil, daysBetween, endNowDates, formatDay, groupPromos, pastCards, promoFormError, waitingRewards,
   promoPhase, runningPromo, scanTarget, shopToday,
 } from "../../src/lib/promos.js";
 
@@ -103,6 +103,29 @@ describe("pastCards", () => {
 
   it("lists newest first, redeemed and expired together", () => {
     expect(past({ w: 1 }, "2026-12-20").map((c) => c.name)).toEqual(["Waffle month", "Hugo", "Shakes"]);
+  });
+
+  describe("waiting rewards", () => {
+    const now = new Date("2026-12-01T12:00:00Z");
+    const waiting = [
+      { id: 3, promo_id: null, card_name: "Hugo", stamps: 9, stamps_for_reward: 9, outcome: "ready", finished_at: "2026-11-25T10:00:00Z", claim_by: "2027-05-25T10:00:00Z" },
+      { id: 4, promo_id: "w", card_name: "Waffle month", stamps: 4, stamps_for_reward: 4, outcome: "ready", finished_at: "2026-10-01T10:00:00Z", claim_by: "2026-11-01T10:00:00Z" },
+    ];
+    const cards = pastCards({ history: [...history, ...waiting], promos: [], stampsByPromo: {}, today: "2026-12-01", timeZone: "Europe/London", now });
+
+    it("come first, dated by when they must be claimed; once that's passed they've expired", () => {
+      expect(cards.map((c) => [c.outcome, c.name, c.day])).toEqual([
+        ["ready", "Hugo", "2027-05-25"],
+        ["redeemed", "Hugo", "2026-11-12"],
+        ["expired", "Waffle month", "2026-11-01"],
+        ["redeemed", "Shakes", "2026-09-21"],
+      ]);
+    });
+
+    it("staff see only the ones that can still be claimed, oldest first", () => {
+      const more = { ...waiting[0], id: 5, finished_at: "2026-11-20T10:00:00Z" };
+      expect(waitingRewards([...history, ...waiting, more], now).map((h) => h.id)).toEqual([5, 3]);
+    });
   });
 });
 

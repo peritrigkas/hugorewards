@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { clientConfig } from "../client.config";
 import { findEarlierCards, isRewardReady } from "../lib/loyalty";
-import { activePromoCards, isPromoCardFull, runningPromo, scanTarget, shopToday } from "../lib/promos";
+import { activePromoCards, isPromoCardFull, runningPromo, scanTarget, shopToday, waitingRewards } from "../lib/promos";
 import { getScanSetting, setScanSetting } from "../lib/scanSetting";
 import { STAMPS_FOR_REWARD } from "../loyaltySettings";
 import { LoadingScreen } from "../components/LoadingScreen";
@@ -30,7 +30,7 @@ function ScanSwitch({ promo, setting, onChange }) {
 }
 
 export function OwnerApp({ onExit }) {
-  const { session, customerOnDevice, customers, cards, loading, stamp, redeem, moveCard, savePromo, deletePromo, signOut } = useOwnerCustomers();
+  const { session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, moveCard, savePromo, deletePromo, signOut } = useOwnerCustomers();
   const [page, setPage] = useState("customers");
   const [openCode, setOpenCode] = useState(null);
   const [scanSetting, setScanSettingState] = useState(getScanSetting);
@@ -41,6 +41,8 @@ export function OwnerApp({ onExit }) {
   const stampsByCustomer = {};
   for (const s of cards.promoStamps) (stampsByCustomer[s.customer_id] ??= {})[s.promo_id] = s.stamps;
   const promoCardsOf = (c) => activePromoCards(cards.promos, stampsByCustomer[c.id] ?? {}, today);
+  const rewards = waitingRewards(cards.history);
+  const rewardsOf = (c) => rewards.filter((h) => h.customer_id === c.id);
 
   const changeScanSetting = (setting) => {
     setScanSetting(setting);
@@ -48,8 +50,9 @@ export function OwnerApp({ onExit }) {
   };
 
   // A scan stamps the chosen card straight away, as before promos. It opens
-  // the customer view instead when staff asked for that, or when the card is
-  // full, so staff can redeem it.
+  // the customer view instead when staff asked for that, when the card is
+  // full, or when the customer has a reward waiting, so staff can offer to
+  // redeem it (or stamp, which moves a full card to the waiting rewards).
   const handleScan = async (code) => {
     const customer = customers.find((c) => c.code === code);
     if (!customer) return { message: "No customer found for that code" };
@@ -57,7 +60,7 @@ export function OwnerApp({ onExit }) {
     const full = target.kind === "promo"
       ? isPromoCardFull(promo, stampsByCustomer[customer.id]?.[promo.id] ?? 0)
       : isRewardReady(customer.stamps, STAMPS_FOR_REWARD);
-    if (target.kind === "ask" || full) {
+    if (target.kind === "ask" || full || rewardsOf(customer).length > 0) {
       setOpenCode(code);
       return { message: "" };
     }
@@ -85,10 +88,12 @@ export function OwnerApp({ onExit }) {
       <CustomerView
         customer={openCustomer}
         promoCards={promoCardsOf(openCustomer)}
+        rewards={rewardsOf(openCustomer)}
         earlierCard={earlierCards[openCustomer.id]}
         onBack={() => setOpenCode(null)}
         onStamp={stamp}
         onRedeem={redeem}
+        onRedeemWaiting={redeemWaiting}
         onMoveCard={moveCard}
       />
     );
@@ -98,7 +103,7 @@ export function OwnerApp({ onExit }) {
         {promo && <ScanSwitch promo={promo} setting={scanSetting} onChange={changeScanSetting} />}
         <ScanPanel onFoundCode={handleScan} />
         {customers.map((c) => (
-          <CustomerRow key={c.code} customer={c} promoCards={promoCardsOf(c)} hasEarlierCard={Boolean(earlierCards[c.id])} onOpen={() => setOpenCode(c.code)} />
+          <CustomerRow key={c.code} customer={c} promoCards={promoCardsOf(c)} rewardCount={rewardsOf(c).length} hasEarlierCard={Boolean(earlierCards[c.id])} onOpen={() => setOpenCode(c.code)} />
         ))}
       </>
     );

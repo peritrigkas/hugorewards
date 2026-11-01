@@ -15,7 +15,7 @@ export async function listPromoStamps() {
   return error ? null : data;
 }
 
-// Redeemed cards, newest first: a customer's own, or staff's whole shop's.
+// Finished cards (redeemed, or waiting to be claimed), newest first: a customer's own, or staff's whole shop's.
 export async function listHistory() {
   const { data, error } = await supabase.from("card_history").select("*").order("finished_at", { ascending: false });
   return error ? null : data;
@@ -32,6 +32,14 @@ export async function addStamp(code, promoId = null) {
 // cards and empties the card. Resolves to null, or the reason it was refused.
 export async function redeemCard(code, promoId = null) {
   const { error } = await supabase.rpc("redeem", { card_code: code, promo: promoId });
+  return error ? error.message : null;
+}
+
+// Staff: gives a reward that's waiting in the customer's past cards (a card
+// that filled up and got another stamp before it was redeemed). Resolves to
+// null, or the reason it was refused.
+export async function redeemWaitingReward(id) {
+  const { error } = await supabase.rpc("redeem_reward", { reward: id });
   return error ? error.message : null;
 }
 

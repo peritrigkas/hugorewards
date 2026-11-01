@@ -12,6 +12,30 @@ Built as designed, plus:
   card?"); the hint and its button are in the customer view.
 - "End now" makes yesterday the promo's last day (and its start, if it
   started today), so no more stamps today; full cards can still be claimed.
+- **Waiting rewards** (2026-11-01, `supabase-waiting-rewards.sql`), see below.
+
+## Waiting rewards
+
+Agreed 2026-11-01, after testing Pretty Pretty: a full card used to refuse
+more stamps until it was redeemed, so a customer who didn't claim lost
+stamps.
+
+- A full card stays as it is until staff either **Redeem** it or tap
+  **+ Stamp, keep reward**. The stamp moves the full card to Past cards as
+  **READY TO CLAIM · by <date>** and starts a new card with that stamp
+  (plus any extra stamps an over-full card had).
+- A waiting reward expires **6 months** (main card) or **1 month** (promo
+  card) after it moved, then shows **EXPIRED**.
+- Staff see "N to claim" in the list. Scanning a customer with a waiting
+  reward opens their view (so staff can remind them before they pay), where
+  each reward has its own Redeem. Redeeming it marks it **REDEEMED**.
+- Customers see a "reward waiting" note above their active cards; waiting
+  rewards come first in Past cards.
+- Stored as `card_history` rows with `outcome = 'ready'` and `claim_by`;
+  `redeem_reward(reward)` turns one into `'redeemed'`. Expired ones aren't
+  stored as such, like expired promo cards.
+- Full promo cards left at the end of a promo keep their claim window, as
+  before.
 
 ## Summary
 
@@ -184,7 +208,8 @@ Primary key: (`customer_id`, `promo_id`).
 | `promo_id` uuid | null for the main card |
 | `card_name`, `icon` | snapshot taken at redemption |
 | `stamps_for_reward`, `stamps` | snapshot taken at redemption |
-| `outcome` text | `'redeemed'` |
+| `outcome` text | `'redeemed'`, or `'ready'` for a waiting reward |
+| `claim_by` timestamptz | waiting rewards only: when it expires |
 | `finished_at` timestamptz | |
 
 Expired cards are **not stored**. They are `promo_stamps` rows (with
@@ -210,8 +235,10 @@ Security definer, staff of the card's shop only:
   - `promo` null means the main card. Its stamps needed come from
     `config.loyalty.stampsForReward`, default 9 as in the app.
   - Promo stamps only while the promo is running, in shop time.
-  - Never above `stamps_for_reward`, and never takes stamps away from a card
-    that's already over it (possible after moving stamps).
+  - On a full card (or one over it, possible after moving stamps), moves one
+    full card to `card_history` as a waiting reward and starts a new card
+    (see Waiting rewards). Before 2026-11-01: never above
+    `stamps_for_reward`.
 - **`redeem(card_code, promo)`**
   - The card must be full.
   - The main card's history entry is named after the shop (`brand_name`)

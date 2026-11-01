@@ -2,6 +2,7 @@
 // who can manage promos, add stamps and redeem, and what each side can read.
 // Runs against the scratch Supabase project, like security.test.js.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { must } from "../support/scratch.js";
 import {
   admin,
   anonClient,
@@ -54,6 +55,8 @@ afterAll(cleanup);
 
 const stamp = (who, card, promo) => who.client.rpc("add_stamp", { card_code: card.code, promo: promo?.id ?? null });
 const redeem = (who, card, promo) => who.client.rpc("redeem", { card_code: card.code, promo: promo?.id ?? null });
+const redeemReward = (who, reward) => who.client.rpc("redeem_reward", { reward: reward.id });
+const daysFromNow = (iso) => (new Date(iso) - Date.now()) / (24 * 60 * 60 * 1000);
 const giveStamps = (card, promo, stamps) => admin.from("promo_stamps").insert({ customer_id: card.id, promo_id: promo.id, stamps });
 
 describe("promos", () => {
@@ -153,26 +156,40 @@ describe("adding stamps", () => {
     expect((await readCustomer(card.id)).stamps).toBe(0);
   });
 
-  it("a promo card never goes above the stamps needed", async () => {
+  it("a stamp on a full promo card moves it to history as waiting and starts a new card", async () => {
     const card = await seedCustomer(tenants.hugo, { stamps: 0 });
     await giveStamps(card, running, running.stamps_for_reward);
-    expect((await stamp(hugoStaff, card, running)).data).toBe(running.stamps_for_reward);
+    expect((await stamp(hugoStaff, card, running)).data).toBe(1);
+    expect(await readPromoStamps(card.id)).toEqual([{ promo_id: running.id, stamps: 1 }]);
+    const [entry] = await readHistory(card.id);
+    expect(entry).toMatchObject({ promo_id: running.id, card_name: running.name, stamps: 4, stamps_for_reward: 4, outcome: "ready" });
+    expect(daysFromNow(entry.claim_by)).toBeGreaterThanOrEqual(28);
+    expect(daysFromNow(entry.claim_by)).toBeLessThanOrEqual(31);
   });
 
-  it("staff add main-card stamps, up to the shop's stamps needed", async () => {
+  it("staff add main-card stamps; a stamp on a full card moves it to history as waiting", async () => {
     const hugoCard = await seedCustomer(tenants.hugo, { stamps: 7 });
     expect((await stamp(hugoStaff, hugoCard)).data).toBe(8);
     expect((await stamp(hugoStaff, hugoCard)).data).toBe(9); // Hugo: the default, 9
-    expect((await stamp(hugoStaff, hugoCard)).data).toBe(9);
+    expect(await readHistory(hugoCard.id)).toEqual([]);
+    expect((await stamp(hugoStaff, hugoCard)).data).toBe(1);
+
+    const { brand_name } = (await admin.from("tenants").select("brand_name").eq("id", tenants.hugo).single()).data;
+    const [entry] = await readHistory(hugoCard.id);
+    expect(entry).toMatchObject({ promo_id: null, card_name: brand_name, stamps: 9, stamps_for_reward: 9, outcome: "ready" });
+    expect(daysFromNow(entry.claim_by)).toBeGreaterThanOrEqual(180);
+    expect(daysFromNow(entry.claim_by)).toBeLessThanOrEqual(185);
 
     const daisyCard = await seedCustomer(tenants.daisy, { stamps: 7 });
     expect((await stamp(daisyStaff, daisyCard)).data).toBe(8); // Daisy's config: 8
-    expect((await stamp(daisyStaff, daisyCard)).data).toBe(8);
+    expect((await stamp(daisyStaff, daisyCard)).data).toBe(1);
+    expect(await readHistory(daisyCard.id)).toMatchObject([{ stamps: 8, outcome: "ready" }]);
   });
 
-  it("never takes stamps away from a card that's over the stamps needed", async () => {
+  it("keeps the extra stamps of an over-full card on the new card", async () => {
     const card = await seedCustomer(tenants.hugo, { stamps: 12 }); // e.g. after moving stamps
-    expect((await stamp(hugoStaff, card)).data).toBe(12);
+    expect((await stamp(hugoStaff, card)).data).toBe(4);
+    expect(await readHistory(card.id)).toMatchObject([{ stamps: 9, outcome: "ready" }]);
   });
 
   it.each([
@@ -284,6 +301,59 @@ describe("redeeming", () => {
       .from("card_history")
       .insert({ customer_id: card.id, tenant_id: tenants.hugo, card_name: "Fake", stamps_for_reward: 9, stamps: 9 });
     expect(await readHistory(card.id)).toEqual([]);
+  });
+});
+
+describe("waiting rewards", () => {
+  const waitingReward = async (card, fields = {}) => {
+    await stamp(hugoStaff, card);
+    const [entry] = await readHistory(card.id);
+    if (Object.keys(fields).length) must(await admin.from("card_history").update(fields).eq("id", entry.id));
+    return entry;
+  };
+
+  it("staff redeem a waiting reward: it becomes redeemed and the new card is untouched", async () => {
+    const card = await seedCustomer(tenants.hugo, { stamps: 9 });
+    const reward = await waitingReward(card);
+    const { error } = await redeemReward(hugoStaff, reward);
+    expect(error).toBeNull();
+    expect(await readHistory(card.id)).toMatchObject([{ id: reward.id, outcome: "redeemed", claim_by: null }]);
+    expect((await readCustomer(card.id)).stamps).toBe(1);
+  });
+
+  it("can't be redeemed twice", async () => {
+    const card = await seedCustomer(tenants.hugo, { stamps: 9 });
+    const reward = await waitingReward(card);
+    await redeemReward(hugoStaff, reward);
+    const { error } = await redeemReward(hugoStaff, reward);
+    expect(error?.message).toMatch(/already been redeemed/);
+  });
+
+  it("can't be redeemed once expired", async () => {
+    const card = await seedCustomer(tenants.hugo, { stamps: 9 });
+    const reward = await waitingReward(card, { claim_by: new Date(Date.now() - 60_000).toISOString() });
+    const { error } = await redeemReward(hugoStaff, reward);
+    expect(error?.message).toMatch(/time to claim/);
+    expect(await readHistory(card.id)).toMatchObject([{ outcome: "ready" }]);
+  });
+
+  it("another shop's staff and customers can't redeem it", async () => {
+    const customer = await signInCustomer();
+    const card = await seedCustomer(tenants.hugo, { user_id: customer.userId, stamps: 9 });
+    const reward = await waitingReward(card);
+    const results = await Promise.all([redeemReward(daisyStaff, reward), redeemReward(customer, reward), anon.rpc("redeem_reward", { reward: reward.id })]);
+    expect(results.map((r) => r.error !== null)).toEqual([true, true, true]);
+    expect(await readHistory(card.id)).toMatchObject([{ outcome: "ready" }]);
+  });
+
+  it("a history row is waiting exactly when it has a claim-by time", async () => {
+    const card = await seedCustomer(tenants.hugo, { stamps: 0 });
+    const base = { customer_id: card.id, tenant_id: tenants.hugo, card_name: "X", stamps_for_reward: 9, stamps: 9 };
+    const bad = await Promise.all([
+      admin.from("card_history").insert({ ...base, outcome: "ready" }),
+      admin.from("card_history").insert({ ...base, outcome: "redeemed", claim_by: new Date().toISOString() }),
+    ]);
+    expect(bad.map((r) => r.error !== null)).toEqual([true, true]);
   });
 });
 

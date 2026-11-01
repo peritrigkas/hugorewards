@@ -4,10 +4,16 @@ import { isRewardReady } from "../lib/loyalty";
 import { claimUntil, formatDay, isPromoCardFull } from "../lib/promos";
 import { STAMPS_FOR_REWARD } from "../loyaltySettings";
 
+// "25 May 2027"
+const formatDate = (iso) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+
 const pill = { border: "none", borderRadius: 999, padding: "8px 14px", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer", flexShrink: 0 };
 const box = { background: "#fff", border: "1px solid var(--c-border)", borderRadius: 14, padding: "12px 16px", marginBottom: 10 };
 
 // One card in the customer view: its stamps and either "+ Stamp" or "Redeem".
+// A full card that can still be stamped also gets "+ Stamp", for a customer
+// who'd rather keep the reward for later: the stamp moves the full card to
+// their waiting rewards and starts a new one.
 function CardLine({ name, stamps, stampsForReward, note, full, canStamp, busy, onStamp, onRedeem }) {
   return (
     <div data-testid="card-line" style={{ ...box, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
@@ -17,21 +23,27 @@ function CardLine({ name, stamps, stampsForReward, note, full, canStamp, busy, o
           {stamps} / {stampsForReward} stamps{note && ` · ${note}`}
         </div>
       </div>
-      {full ? (
-        <button disabled={busy} onClick={onRedeem} style={{ ...pill, background: "var(--c-gold)", color: "var(--c-dark)" }}>Redeem</button>
-      ) : canStamp ? (
-        <button disabled={busy} onClick={onStamp} style={{ ...pill, background: "var(--c-dark)", color: "#fff" }}>+ Stamp</button>
-      ) : null}
+      <div style={{ display: "flex", gap: 6 }}>
+        {full && canStamp && (
+          <button data-testid="card-line-keep" disabled={busy} onClick={onStamp} style={{ ...pill, background: "var(--c-border)", color: "var(--c-dark)" }}>+ Stamp, keep reward</button>
+        )}
+        {full ? (
+          <button data-testid="card-line-action" disabled={busy} onClick={onRedeem} style={{ ...pill, background: "var(--c-gold)", color: "var(--c-dark)" }}>Redeem</button>
+        ) : canStamp ? (
+          <button data-testid="card-line-action" disabled={busy} onClick={onStamp} style={{ ...pill, background: "var(--c-dark)", color: "#fff" }}>+ Stamp</button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 // Everything staff do for one customer: opened by scanning their code, typing
-// it, or tapping them in the list. Shows the main card and any active promo
-// card, the "possible earlier card" hint, and Move stamps. Moving always keeps
+// it, or tapping them in the list. Shows rewards waiting to be claimed, the
+// main card and any active promo card, the "possible earlier card" hint, and
+// Move stamps. Moving always keeps
 // the card on the customer's phone now, adds the other card's stamps to it
 // and removes the other card.
-export function CustomerView({ customer: c, promoCards, earlierCard, onBack, onStamp, onRedeem, onMoveCard }) {
+export function CustomerView({ customer: c, promoCards, rewards, earlierCard, onBack, onStamp, onRedeem, onRedeemWaiting, onMoveCard }) {
   const [moving, setMoving] = useState(false);
   const [newCode, setNewCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -55,6 +67,11 @@ export function CustomerView({ customer: c, promoCards, earlierCard, onBack, onS
     setMessage(error ?? "✓ Reward redeemed");
   };
 
+  const redeemWaiting = async (reward) => {
+    const error = await run(() => onRedeemWaiting(reward));
+    setMessage(error ?? "✓ Reward redeemed");
+  };
+
   const move = async (oldCode, targetCode) => {
     const error = await run(() => onMoveCard(oldCode, targetCode.trim().toUpperCase()));
     if (error) {
@@ -74,6 +91,22 @@ export function CustomerView({ customer: c, promoCards, earlierCard, onBack, onS
         <div style={{ flex: 1, fontFamily: "Baloo 2, sans-serif", fontWeight: 700, fontSize: 22, color: "var(--c-dark)" }}>{c.name}</div>
         <div style={{ fontSize: 13, color: "var(--c-faint)" }}>{c.code}</div>
       </div>
+
+      {rewards.length > 0 && (
+        <div data-testid="waiting-rewards" style={{ ...box, background: "var(--c-lilac)" }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--c-dark)", marginBottom: 6 }}>
+            🎁 {rewards.length === 1 ? "A reward is" : `${rewards.length} rewards are`} waiting. Remind them before they pay!
+          </div>
+          {rewards.map((r) => (
+            <div key={r.id} data-testid="waiting-reward" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 6 }}>
+              <div style={{ fontSize: 12, color: "var(--c-dark)" }}>
+                <b>{r.promo_id ? r.card_name : "Main card"}</b> · claim by {formatDate(r.claim_by)}
+              </div>
+              <button disabled={busy} onClick={() => redeemWaiting(r)} style={{ ...pill, background: "var(--c-gold)", color: "var(--c-dark)" }}>Redeem</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <CardLine
         name="Main card"
