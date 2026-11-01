@@ -53,8 +53,8 @@ home-screen icon/name.
 | `clients/<slug>/` manifest convention (appId, appName, tenantSlug, icon/splash colors) — validated on every load | ✅ Done | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | "New client" scaffold script (`npm run new-client`) | ✅ Done | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | Android `appId`/`appName`/Java-package substitution script (`scripts/apply-client-identity.mjs`) | ✅ Done — verified on this machine: app-name escaping, whole-package move (incl. nested packages), `npm run reset-client` restore | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
-| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | 🚧 Wired up, but **untested end-to-end** — `@capacitor/assets@3.0.5` (run on demand via `npx`, not a devDependency) pulls in `sharp@0.32.6`, which has no prebuilt binary for Node 24 on Windows x64. Needs a first run on Node 22 LTS, WSL/Linux or a Mac (see `clients/README.md`) — a Mac is not required for Android | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
-| `npm run build-client` orchestrator (identity + assets + web build + `cap sync`) | ✅ Done — Hugo builds end-to-end on this machine; other clients hit the sharp caveat above, and the automatic rollback was verified on exactly that failure | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | ✅ Done — tested end-to-end on Windows with Node 22 (2026-11-01): a test client's icon and splash (light and dark) use its `client.json` colors and a debug APK compiles. `sharp@0.32.6` (pulled in by `@capacitor/assets@3.0.5`) has no prebuilt binary for Node 24 on Windows, so build clients on Node 22, WSL/Linux or a Mac (see `clients/README.md`) | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| `npm run build-client` orchestrator (identity + assets + web build + `cap sync`) | ✅ Done — Hugo and a test client (Node 22) build end-to-end on this machine; the automatic rollback was verified on the Node 24 sharp failure | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | iOS bundle-id + signing/provisioning setup (`@capacitor/ios` not yet installed) | ⏳ Not started | — |
 | iOS CI (GitHub Actions/Codemagic) | ⏸️ Deferred until 2nd client confirms it's worth automating | — |
 
@@ -109,8 +109,8 @@ client's app ships.
   (`joinTagline`, `greetingSubtitle`, `loadingMessage`, `howToEarn`,
   `loyalty.earnCardBody`, `loyalty.cardsPromoBody`, ...),
   which they otherwise inherit from Hugo's bundled config.
-- [ ] **First non-Hugo Android build** (Node 22 LTS on Windows, WSL/Linux or a Mac) — icon/splash generation is
-  still untested end-to-end (checklist in `clients/README.md`).
+- [ ] **First non-Hugo Android build** (Node 22 LTS on Windows, WSL/Linux or a Mac) — built and compiled for a test client on 2026-11-01; still to do: install it on a phone and check the name, icon and splash
+  (checklist in `clients/README.md`).
 
 ## Decisions log
 
