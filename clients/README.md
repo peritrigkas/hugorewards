@@ -60,9 +60,10 @@ The tenant slug is passed to the web build as an environment variable, so
 devDependency, because its native `sharp` dependency has no prebuilt binary
 for Node 24 on Windows x64, and that would break `npm install`. On that setup
 the asset step fails (and `build-client` rolls back). Build non-Hugo clients
-on a Mac, or on Linux / an older Node.
+with an older Node (e.g. Node 22 LTS via nvm-windows), in WSL / Linux, or on a
+Mac. A Mac is only required for iOS.
 
-**First Mac run checklist** (this step hasn't been tested end-to-end yet):
+**First run checklist** (this step hasn't been tested end-to-end yet):
 
 1. `npm run new-client -- daisy com.daisy.rewards "Daisy Rewards"`, add a test
    `clients/daisy/logo.png`.
