@@ -6,8 +6,9 @@ Status: **agreed** (2026-10-30). Database built and tested on scratch
 App screens built (2026-10-31); not yet released.
 
 Built as designed, plus:
-- Scanning a **full** card opens the customer view instead of stamping, so
-  staff can redeem it there.
+- Scanning a **full** card opened the customer view instead of stamping, so
+  staff could redeem it there. Replaced by waiting rewards (below): a scan
+  now stamps a full card too.
 - The staff list marks a card that has a possible earlier card ("Earlier
   card?"); the hint and its button are in the customer view.
 - "End now" makes yesterday the promo's last day (and its start, if it
@@ -26,9 +27,11 @@ stamps.
   (plus any extra stamps an over-full card had).
 - A waiting reward expires **6 months** (main card) or **1 month** (promo
   card) after it moved, then shows **EXPIRED**.
-- Staff see "N to claim" in the list. Scanning a customer with a waiting
-  reward opens their view (so staff can remind them before they pay), where
-  each reward has its own Redeem. Redeeming it marks it **REDEEMED**.
+- A scan always stamps, a full card included (that keeps its reward
+  waiting). If the customer then has a reward waiting, the scan also opens
+  their view, so staff can remind them before they pay; each waiting reward
+  has its own Redeem, which marks it **REDEEMED**. The list shows
+  "N to claim".
 - Customers see a "reward waiting" note above their active cards; waiting
   rewards come first in Past cards.
 - Stored as `card_history` rows with `outcome = 'ready'` and `claim_by`;
