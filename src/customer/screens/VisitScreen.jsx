@@ -2,6 +2,21 @@ import { MapPin, Instagram, Facebook, Music2 } from "lucide-react";
 import { clientConfig } from "../../client.config";
 import { BrandMark } from "../../components/BrandMark";
 
+// Opening hours: a single line, or one row per day with the times lined up.
+function Hours({ hours }) {
+  if (!Array.isArray(hours)) return hours;
+  return (
+    <div data-testid="opening-hours" style={{ display: "grid", gridTemplateColumns: "auto 1fr", columnGap: 16, rowGap: 2 }}>
+      {hours.map(([day, time]) => (
+        <div key={day} style={{ display: "contents" }}>
+          <span>{day}</span>
+          <span>{time}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function VisitScreen() {
   return (
     <div style={{ paddingBottom: 100 }}>
@@ -27,7 +42,7 @@ export function VisitScreen() {
             <div style={{ width: 22, textAlign: "center", flexShrink: 0, fontSize: 16 }}>🕐</div>
             <div>
               <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)" }}>Hours</div>
-              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginTop: 2 }}>{clientConfig.location.hours}</div>
+              <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-muted)", marginTop: 2 }}><Hours hours={clientConfig.location.hours} /></div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 14 }}>
