@@ -43,11 +43,11 @@ function CardLine({ name, stamps, stampsForReward, note, full, canStamp, busy, o
 // Move stamps. Moving always keeps
 // the card on the customer's phone now, adds the other card's stamps to it
 // and removes the other card.
-export function CustomerView({ customer: c, promoCards, rewards, earlierCard, onBack, onStamp, onRedeem, onRedeemWaiting, onMoveCard }) {
+export function CustomerView({ customer: c, promoCards, rewards, initialMessage = "", earlierCard, onBack, onStamp, onRedeem, onRedeemWaiting, onMoveCard }) {
   const [moving, setMoving] = useState(false);
   const [newCode, setNewCode] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(initialMessage);
 
   const run = async (action) => {
     setBusy(true);

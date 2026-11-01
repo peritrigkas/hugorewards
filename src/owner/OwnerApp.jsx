@@ -33,6 +33,8 @@ export function OwnerApp({ onExit }) {
   const { session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, moveCard, savePromo, deletePromo, signOut } = useOwnerCustomers();
   const [page, setPage] = useState("customers");
   const [openCode, setOpenCode] = useState(null);
+  // Shown in the customer view when a scan opened it after stamping.
+  const [scanMessage, setScanMessage] = useState("");
   const [scanSetting, setScanSettingState] = useState(getScanSetting);
   const earlierCards = findEarlierCards(customers);
   const today = shopToday(clientConfig.timezone);
@@ -50,9 +52,10 @@ export function OwnerApp({ onExit }) {
   };
 
   // A scan stamps the chosen card straight away, as before promos. It opens
-  // the customer view instead when staff asked for that, when the card is
-  // full, or when the customer has a reward waiting, so staff can offer to
-  // redeem it (or stamp, which moves a full card to the waiting rewards).
+  // the customer view instead when staff asked for that, or when the card is
+  // full, so staff can redeem it (or stamp, which keeps the reward waiting).
+  // When the customer has a reward waiting, it stamps and then opens the
+  // view, so staff can remind them before they pay.
   const handleScan = async (code) => {
     const customer = customers.find((c) => c.code === code);
     if (!customer) return { message: "No customer found for that code" };
@@ -60,11 +63,17 @@ export function OwnerApp({ onExit }) {
     const full = target.kind === "promo"
       ? isPromoCardFull(promo, stampsByCustomer[customer.id]?.[promo.id] ?? 0)
       : isRewardReady(customer.stamps, STAMPS_FOR_REWARD);
-    if (target.kind === "ask" || full || rewardsOf(customer).length > 0) {
+    if (target.kind === "ask" || full) {
+      setScanMessage("");
       setOpenCode(code);
       return { message: "" };
     }
-    return stamp(customer, target.kind === "promo" ? promo : null);
+    const result = await stamp(customer, target.kind === "promo" ? promo : null);
+    if (result.ok && rewardsOf(customer).length > 0) {
+      setScanMessage(result.message);
+      setOpenCode(code);
+    }
+    return result;
   };
 
   if (session === undefined) {
@@ -89,8 +98,9 @@ export function OwnerApp({ onExit }) {
         customer={openCustomer}
         promoCards={promoCardsOf(openCustomer)}
         rewards={rewardsOf(openCustomer)}
+        initialMessage={scanMessage}
         earlierCard={earlierCards[openCustomer.id]}
-        onBack={() => setOpenCode(null)}
+        onBack={() => { setOpenCode(null); setScanMessage(""); }}
         onStamp={stamp}
         onRedeem={redeem}
         onRedeemWaiting={redeemWaiting}
@@ -103,7 +113,7 @@ export function OwnerApp({ onExit }) {
         {promo && <ScanSwitch promo={promo} setting={scanSetting} onChange={changeScanSetting} />}
         <ScanPanel onFoundCode={handleScan} />
         {customers.map((c) => (
-          <CustomerRow key={c.code} customer={c} promoCards={promoCardsOf(c)} rewardCount={rewardsOf(c).length} hasEarlierCard={Boolean(earlierCards[c.id])} onOpen={() => setOpenCode(c.code)} />
+          <CustomerRow key={c.code} customer={c} promoCards={promoCardsOf(c)} rewardCount={rewardsOf(c).length} hasEarlierCard={Boolean(earlierCards[c.id])} onOpen={() => { setScanMessage(""); setOpenCode(c.code); }} />
         ))}
       </>
     );

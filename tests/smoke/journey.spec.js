@@ -134,14 +134,20 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
     await expect(phone2.getByTestId("past-card")).toContainText("READY TO CLAIM");
   });
 
-  await test.step("staff see it in the list, and redeeming it marks it redeemed", async () => {
+  await test.step("staff see it in the list; a scan still stamps, then opens the customer as a reminder", async () => {
     await staff.getByLabel("Back").click();
     await expect(staffRow(staff, code).getByTestId("customer-row-rewards")).toHaveText("1 to claim");
-    await openCustomer(staff, code);
+    await typeCode(staff, code);
+    await expect(staff.getByTestId("customer-view-message")).toContainText("✓ Added a stamp");
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`2 / ${stampsForReward} stamps`);
+    await expect(staff.getByTestId("waiting-reward")).toHaveCount(1);
+  });
+
+  await test.step("redeeming the waiting reward marks it redeemed", async () => {
     await staff.getByTestId("waiting-reward").getByRole("button", { name: "Redeem" }).click();
     await expect(staff.getByText("✓ Reward redeemed")).toBeVisible();
     await expect(staff.getByTestId("waiting-rewards")).toBeHidden();
-    await expect(cardLineStamps(staff, "Main card")).toHaveText(`1 / ${stampsForReward} stamps`);
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`2 / ${stampsForReward} stamps`);
     await expect(phone2.getByTestId("past-card")).toContainText("REDEEMED");
   });
   await staffContext.close();

@@ -321,6 +321,16 @@ describe("waiting rewards", () => {
     expect((await readCustomer(card.id)).stamps).toBe(1);
   });
 
+  it("a customer can have several waiting at once, and keeps collecting", async () => {
+    const card = await seedCustomer(tenants.hugo, { stamps: 9 });
+    await stamp(hugoStaff, card);
+    for (let n = 2; n <= 9; n++) await stamp(hugoStaff, card);
+    expect((await stamp(hugoStaff, card)).data).toBe(1);
+    for (let n = 2; n <= 9; n++) await stamp(hugoStaff, card);
+    expect((await stamp(hugoStaff, card)).data).toBe(1);
+    expect((await readHistory(card.id)).map((h) => h.outcome)).toEqual(["ready", "ready", "ready"]);
+  });
+
   it("can't be redeemed twice", async () => {
     const card = await seedCustomer(tenants.hugo, { stamps: 9 });
     const reward = await waitingReward(card);
