@@ -1,8 +1,12 @@
 import {
   Menu, User, Home, Star, QrCode, UtensilsCrossed, MapPin, ChevronLeft, X, Instagram, Facebook,
-  Music2,
+  Music2, Sparkles, Scissors, Heart, List,
 } from "lucide-react";
 import { clientConfig } from "../client.config";
+
+const MENU_ICONS = { utensils: UtensilsCrossed, sparkles: Sparkles, scissors: Scissors, heart: Heart, list: List };
+const MenuIcon = MENU_ICONS[clientConfig.menu.navIcon] || UtensilsCrossed;
+const MENU_LABEL = clientConfig.menu.navLabel || "Menu";
 
 export function TopBar({ onBack, onMenu, onSecretTap, onAccount }) {
   return (
@@ -29,7 +33,7 @@ export function DrawerMenu({ open, onClose, navigate }) {
     { icon: Home, label: "Home", screen: "home" },
     { icon: Star, label: "My Rewards", screen: "rewards" },
     { icon: QrCode, label: "Scan Code", screen: "scan" },
-    { icon: UtensilsCrossed, label: "Menu", screen: "menu" },
+    { icon: MenuIcon, label: MENU_LABEL, screen: "menu" },
     { icon: MapPin, label: "Visit Us", screen: "visit" },
   ];
   return (
@@ -62,7 +66,7 @@ export function BottomNav({ screen, navigate }) {
     { icon: Home, label: "Home", screen: "home" },
     { icon: Star, label: "Rewards", screen: "rewards" },
     { icon: QrCode, label: "Scan Code", screen: "scan" },
-    { icon: UtensilsCrossed, label: "Menu", screen: "menu" },
+    { icon: MenuIcon, label: MENU_LABEL, screen: "menu" },
     { icon: MapPin, label: "Visit", screen: "visit" },
   ];
   const rewardsGroup = ["rewards", "cards", "gifts"];
