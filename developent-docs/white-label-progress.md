@@ -53,7 +53,7 @@ home-screen icon/name.
 | `clients/<slug>/` manifest convention (appId, appName, tenantSlug, icon/splash colors) — validated on every load | ✅ Done | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | "New client" scaffold script (`npm run new-client`) | ✅ Done | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | Android `appId`/`appName`/Java-package substitution script (`scripts/apply-client-identity.mjs`) | ✅ Done — verified on this machine: app-name escaping, whole-package move (incl. nested packages), `npm run reset-client` restore | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
-| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | 🚧 Wired up, but **untested end-to-end** — `@capacitor/assets@3.0.5` (run on demand via `npx`, not a devDependency) pulls in `sharp@0.32.6`, which has no prebuilt binary for Node 24 on Windows x64. Needs a first run on a Mac (see `clients/README.md`) | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
+| Icon/splash generation tooling (`@capacitor/assets` Easy Mode, `scripts/generate-client-assets.mjs`) | 🚧 Wired up, but **untested end-to-end** — `@capacitor/assets@3.0.5` (run on demand via `npx`, not a devDependency) pulls in `sharp@0.32.6`, which has no prebuilt binary for Node 24 on Windows x64. Needs a first run on Node 22 LTS, WSL/Linux or a Mac (see `clients/README.md`) — a Mac is not required for Android | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | `npm run build-client` orchestrator (identity + assets + web build + `cap sync`) | ✅ Done — Hugo builds end-to-end on this machine; other clients hit the sharp caveat above, and the automatic rollback was verified on exactly that failure | [#7](https://github.com/peritrigkas/hugorewards/pull/7) |
 | iOS bundle-id + signing/provisioning setup (`@capacitor/ios` not yet installed) | ⏳ Not started | — |
 | iOS CI (GitHub Actions/Codemagic) | ⏸️ Deferred until 2nd client confirms it's worth automating | — |
@@ -94,7 +94,7 @@ client's app ships.
   old card's stamps to the card on the customer's phone instead of deleting
   it. Same function name and arguments, so 1.0.3 gets it without an update.
   Tested on scratch and applied to live 2026-10-30 ([#21](https://github.com/peritrigkas/hugorewards/pull/21)).
-- [ ] **Promo cards and past cards** (`developent-docs/promo-cards-design.md`)
+- [x] **Promo cards and past cards** (`developent-docs/promo-cards-design.md`) (live 2026-11-01: Android 1.0.5 published)
   - [x] Database: `supabase-promo-cards.sql`, tested on scratch 2026-10-30
     (`tests/db/promos.test.js`)
   - [x] App: customer promo card and Past cards tab; staff customer view,
@@ -102,14 +102,14 @@ client's app ships.
     `add_stamp` / `redeem` (2026-10-31). Needs the SQL on live first: staff
     stamping uses `add_stamp`
   - [x] SQL applied to live 2026-10-31 (migration `promo_cards`)
-  - [ ] Release the app as 1.0.5 (versionCode 6)
+  - [x] Release the app as 1.0.5 (versionCode 6) — published 2026-11-01 ([#27](https://github.com/peritrigkas/hugorewards/pull/27))
 - [ ] **Set the new client's artwork in their `tenants` row** — upload their
   logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
   `config.loyalty.stampIcon`, and override the cow-themed copy
   (`joinTagline`, `greetingSubtitle`, `loadingMessage`, `howToEarn`,
   `loyalty.earnCardBody`, `loyalty.cardsPromoBody`, ...),
   which they otherwise inherit from Hugo's bundled config.
-- [ ] **First non-Hugo Android build on a Mac** — icon/splash generation is
+- [ ] **First non-Hugo Android build** (Node 22 LTS on Windows, WSL/Linux or a Mac) — icon/splash generation is
   still untested end-to-end (checklist in `clients/README.md`).
 
 ## Decisions log
