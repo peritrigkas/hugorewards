@@ -123,11 +123,18 @@ client's app ships.
   - [x] No `customers_default_tenant` trigger on live: `supabase-anon-customers.sql`
     already dropped it (checked 2026-11-01). The remaining `customers_guard_write`
     trigger never fills in a tenant
-  - [x] `clients/prettypretty/` with a **placeholder** logo; `build-client` on
+  - [x] `clients/prettypretty/` (first with a placeholder logo); `build-client` on
     Node 22 and a debug APK (`com.prettypretty.rewards`) compile
-  - [ ] Replace mock details: address, hours and phone are made up (phone is in
-    Ofcom's drama range); logo is a placeholder "PP" monogram; no in-app
-    `logoUrl` yet; confirm the time zone (`Europe/London`) and the birthday treat
+  - [x] Real details (2026-11-01, [#35](https://github.com/peritrigkas/hugorewards/pull/35)):
+    the salon's logo (round crop for icon/splash; in-app `logoUrl` in the
+    `tenant-assets` bucket), address "12 High Street", hours one row per day
+    (Mon closed, Tue–Sat 10am – 7pm, Sun 11am – 5pm), birthday treat kept
+  - [x] Photos (2026-11-01): home banners, the three service tiles and four of
+    the five services (not Pedicures), cropped to each slot as WebP
+    (`clients/prettypretty/photos/web/`, ~380 KB total) and served from
+    `tenant-assets/prettypretty/`
+  - [ ] Still placeholder: phone (020 7946 0123 is in Ofcom's drama range),
+    postcode "London AB1 2CD", social links; time zone assumed `Europe/London`
   - [x] Staff account for the salon (`staff@prettypretty.com`, created
     2026-11-01), mapped to the tenant in `staff_tenant` on live
   - [x] Install on a phone (debug build, 2026-11-01): name, icon, join, scan,

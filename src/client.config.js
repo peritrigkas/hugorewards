@@ -104,6 +104,8 @@ export const clientConfig = {
   location: {
     intro: "One shop, in the West Village. Come find the purple building, mind the cow.",
     address: "17 Perry St, New York, NY 10014",
+    // One line, or one row per day (or group of days) as [day, time] pairs,
+    // e.g. [["Monday", "Closed"], ["Tuesday", "10am – 7pm"]].
     hours: "7am – 7pm, every day",
     phone: "212-COW-HUGO",
   },
