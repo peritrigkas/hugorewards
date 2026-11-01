@@ -57,7 +57,12 @@ export const clientConfig = {
     progressLabel: "Collect {n} stamps for a free coffee",
   },
 
+  // Optional photos (imageUrl / swirlImageUrl below, and on menuStrip items
+  // and menu categories): public URLs, normally in the `tenant-assets`
+  // Storage bucket. Without one, that spot keeps its color gradient/tile.
   hero: {
+    imageUrl: null,
+    swirlImageUrl: null,
     titleLines: ["Offbeat", "Coffee"],
     swirlLines: ["Small batch.", "Big mood."],
   },
@@ -68,7 +73,14 @@ export const clientConfig = {
     { name: "Cow in Green", tag: "mint matcha", bg: "#C9DDB8" },
   ],
 
+  // A tenant's `menu` replaces this object wholesale, so the screens fall
+  // back to these labels when a row leaves them out. navIcon is one of
+  // utensils, sparkles, scissors, heart, list (MENU_ICONS in Navigation.jsx).
   menu: {
+    title: "Our Menu",
+    navLabel: "Menu",
+    navIcon: "utensils",
+    stripTitle: "On the menu",
     intro: "Hugo keeps things small and offbeat rather than trying to be everything — a short menu, done properly, adapted for dietary requirements on request.",
     categories: [
       { title: "Coffee", body: "A small, considered coffee list pulled from our own house blend — proper speciality coffee, no fuss, made the way you like it." },

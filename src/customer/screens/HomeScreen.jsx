@@ -39,11 +39,18 @@ function Greeting({ customer, cardCount }) {
   );
 }
 
+// A photo behind banner text, with a dark scrim so light text stays readable
+// whatever the photo looks like.
+export function photoBackground(url) {
+  return `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.45)), center / cover no-repeat url("${url}")`;
+}
+
 function HeroBanner() {
+  const { imageUrl } = clientConfig.hero;
   return (
-    <div style={{ margin: "0 0 24px", background: "linear-gradient(160deg, var(--c-lilac) 0%, var(--c-purple) 100%)", padding: "50px 24px", textAlign: "center" }}>
+    <div style={{ margin: "0 0 24px", background: imageUrl ? photoBackground(imageUrl) : "linear-gradient(160deg, var(--c-lilac) 0%, var(--c-purple) 100%)", padding: "50px 24px", textAlign: "center" }}>
       <BrandMark size={90} style={{ margin: "0 auto 8px", opacity: 0.9 }} />
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 40, color: "var(--c-dark)", lineHeight: 1.05 }}>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 40, color: imageUrl ? "#fff" : "var(--c-dark)", lineHeight: 1.05 }}>
         {clientConfig.hero.titleLines.map((line, i) => (
           <React.Fragment key={i}>
             {i > 0 && <br />}
@@ -56,8 +63,9 @@ function HeroBanner() {
 }
 
 function SwirlDivider() {
+  const { swirlImageUrl } = clientConfig.hero;
   return (
-    <div style={{ height: 200, margin: "0 0 32px", position: "relative", overflow: "hidden", background: "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ height: 200, margin: "0 0 32px", position: "relative", overflow: "hidden", background: swirlImageUrl ? photoBackground(swirlImageUrl) : "radial-gradient(circle at 20% 30%, var(--c-gold) 0%, transparent 45%), radial-gradient(circle at 80% 70%, var(--c-purple) 0%, transparent 50%), linear-gradient(160deg, var(--c-dark) 0%, var(--c-darkAlt) 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontWeight: 800, fontSize: 34, color: "var(--c-cream)", textAlign: "center", lineHeight: 1.1 }}>
         {clientConfig.hero.swirlLines.map((line, i) => (
           <React.Fragment key={i}>
@@ -91,12 +99,12 @@ function MenuStrip() {
   const items = clientConfig.menuStrip;
   return (
     <div style={{ padding: "0 20px", marginBottom: 32 }}>
-      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "var(--c-dark)", marginBottom: 14 }}>On the menu</div>
+      <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 20, color: "var(--c-dark)", marginBottom: 14 }}>{clientConfig.menu.stripTitle || "On the menu"}</div>
       <div style={{ display: "flex", gap: 12 }}>
         {items.map((item) => (
           <div key={item.name} style={{ flex: 1, textAlign: "center" }}>
-            <div style={{ background: item.bg, borderRadius: 16, border: "2px solid var(--c-dark)", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-              <BrandMark size={44} />
+            <div style={{ background: item.imageUrl ? `center / cover no-repeat url("${item.imageUrl}")` : item.bg, borderRadius: 16, border: "2px solid var(--c-dark)", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+              {!item.imageUrl && <BrandMark size={44} />}
             </div>
             <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: "var(--c-dark)" }}>{item.name}</div>
             <div style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: "var(--c-muted)" }}>{item.tag}</div>
