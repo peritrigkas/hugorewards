@@ -103,14 +103,22 @@ client's app ships.
     stamping uses `add_stamp`
   - [x] SQL applied to live 2026-10-31 (migration `promo_cards`)
   - [x] Release the app as 1.0.5 (versionCode 6) — published 2026-11-01 ([#27](https://github.com/peritrigkas/hugorewards/pull/27))
-- [ ] **Set the new client's artwork in their `tenants` row** — upload their
-  logo to the `tenant-assets` bucket and set `config.logoUrl`, pick a
-  `config.loyalty.stampIcon`, and override the cow-themed copy
-  (`joinTagline`, `greetingSubtitle`, `loadingMessage`, `howToEarn`,
-  `loyalty.earnCardBody`, `loyalty.cardsPromoBody`, ...),
-  which they otherwise inherit from Hugo's bundled config.
-- [ ] **First non-Hugo Android build** (Node 22 LTS on Windows, WSL/Linux or a Mac) — built and compiled for a test client on 2026-11-01; still to do: install it on a phone and check the name, icon and splash
-  (checklist in `clients/README.md`).
+- [ ] **Second client: Pretty Pretty** (nail salon, slug `prettypretty`,
+  code prefix `PP`, Android only for now)
+  - [x] `tenants` row on live (2026-11-01): lilac/pink palette, 9 stamps +
+    1 free, heart stamps, salon wording and services list, "Services" tab.
+    Tested on scratch first; live config matches scratch exactly
+  - [x] No `customers_default_tenant` trigger on live: `supabase-anon-customers.sql`
+    already dropped it (checked 2026-11-01). The remaining `customers_guard_write`
+    trigger never fills in a tenant
+  - [x] `clients/prettypretty/` with a **placeholder** logo; `build-client` on
+    Node 22 and a debug APK (`com.prettypretty.rewards`) compile
+  - [ ] Replace mock details: address, hours and phone are made up (phone is in
+    Ofcom's drama range); logo is a placeholder "PP" monogram; no in-app
+    `logoUrl` yet; confirm the time zone (`Europe/London`) and the birthday treat
+  - [ ] Staff account for the salon, mapped to the tenant in `staff_tenant`
+  - [ ] Install on a phone: name, icon, splash, join, stamp, redeem
+  - [ ] Play Console listing, signed AAB, release
 
 ## Decisions log
 
