@@ -45,7 +45,7 @@ export function RewardsHome({ goToCards, goToGifts }) {
       <RewardsHero />
       <div style={{ height: 20 }} />
       <RewardsTile title="MY LOYALTY CARDS" body={clientConfig.loyalty.cardsPromoBody} cta="VIEW CARDS" bg="var(--c-dark)" color="var(--c-cream)" onClick={goToCards} />
-      <RewardsTile title="MY GIFTS" body="Check what's waiting for you — like a free coffee on your birthday." cta="VIEW GIFT LIST" bg="var(--c-gold)" color="var(--c-dark)" onClick={goToGifts} />
+      <RewardsTile title="MY GIFTS" body={clientConfig.loyalty.giftsPromoBody} cta="VIEW GIFT LIST" bg="var(--c-gold)" color="var(--c-dark)" onClick={goToGifts} />
       <HowToEarn />
     </div>
   );

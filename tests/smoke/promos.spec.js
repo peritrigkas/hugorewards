@@ -30,7 +30,8 @@ test("staff run a promo: customers see it, staff stamp and redeem both cards, an
     await staff.getByRole("spinbutton").fill("2");
     await staff.getByRole("button", { name: "Save" }).click();
     await expect(staff.getByText("Running now")).toBeVisible();
-    await expect(staff.getByTestId("promo-line")).toContainText(`${promoName}`);
+    // Filtered by name: the shop may have other promos (past ones are listed too).
+    await expect(staff.getByTestId("promo-line").filter({ hasText: promoName })).toBeVisible();
     await staff.getByRole("button", { name: "Customers" }).click();
   });
 
