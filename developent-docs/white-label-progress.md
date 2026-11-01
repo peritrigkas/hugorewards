@@ -103,6 +103,18 @@ client's app ships.
     stamping uses `add_stamp`
   - [x] SQL applied to live 2026-10-31 (migration `promo_cards`)
   - [x] Release the app as 1.0.5 (versionCode 6) — published 2026-11-01 ([#27](https://github.com/peritrigkas/hugorewards/pull/27))
+- [ ] **Waiting rewards** (`developent-docs/promo-cards-design.md`, "Waiting rewards")
+  ([#33](https://github.com/peritrigkas/hugorewards/pull/33)): a stamp on a full
+  card (a scan included) keeps the reward waiting in Past cards as READY TO CLAIM
+  and starts a new card; it expires after 6 months (main) / 1 month (promo).
+  Found while testing Pretty Pretty
+  - [x] Database: `supabase-waiting-rewards.sql`, tested on scratch and applied
+    to live 2026-11-01 (migration `waiting_rewards`). Additive: 1.0.5 never
+    creates waiting rewards
+  - [x] App: staff "+ Stamp, keep reward", "N to claim", reminder after a scan,
+    Redeem per waiting reward; customer "reward waiting" note and Past cards.
+    Tested on a phone (Pretty Pretty debug build) 2026-11-01
+  - [ ] Release Hugo as 1.0.6 (versionCode 7)
 - [ ] **Second client: Pretty Pretty** (nail salon, slug `prettypretty`,
   code prefix `PP`, Android only for now)
   - [x] `tenants` row on live (2026-11-01): lilac/pink palette, 9 stamps +
@@ -116,8 +128,11 @@ client's app ships.
   - [ ] Replace mock details: address, hours and phone are made up (phone is in
     Ofcom's drama range); logo is a placeholder "PP" monogram; no in-app
     `logoUrl` yet; confirm the time zone (`Europe/London`) and the birthday treat
-  - [ ] Staff account for the salon, mapped to the tenant in `staff_tenant`
-  - [ ] Install on a phone: name, icon, splash, join, stamp, redeem
+  - [x] Staff account for the salon (`staff@prettypretty.com`, created
+    2026-11-01), mapped to the tenant in `staff_tenant` on live
+  - [x] Install on a phone (debug build, 2026-11-01): name, icon, join, scan,
+    stamp, redeem, waiting rewards. AVG flags the sideloaded debug APK as
+    "suspicious" (expected for a debug-signed app from outside Play)
   - [ ] Play Console listing, signed AAB, release
 
 ## Decisions log
