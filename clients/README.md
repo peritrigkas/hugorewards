@@ -63,15 +63,25 @@ the asset step fails (and `build-client` rolls back). Build non-Hugo clients
 with an older Node (e.g. Node 22 LTS via nvm-windows), in WSL / Linux, or on a
 Mac. A Mac is only required for iOS.
 
-**First run checklist** (this step hasn't been tested end-to-end yet):
+Tested on Windows with Node 22.23.4 (2026-11-01). If you first ran it on
+Node 24, npx has cached a copy of `sharp` without its native binary, and Node
+22 keeps reusing it. Delete the cached package folder named in the error
+(`%LOCALAPPDATA%\npm-cache\_npx\<hash>`) and run again.
 
-1. `npm run new-client -- daisy com.daisy.rewards "Daisy Rewards"`, add a test
-   `clients/daisy/logo.png`.
-2. `npm run build-client -- daisy` — check the icon/splash backgrounds in
-   `android/app/src/main/res` use the colors from `client.json`.
-3. `npx cap open android`, run on a device/emulator: launcher name, icon and
-   splash should be Daisy's.
-4. `npm run reset-client`, then `git status` — should be clean.
+To compile the client's app with Gradle outside Android Studio, use Java 21
+(e.g. `JAVA_HOME=~/.jdks/jbr-21.x`). Gradle 8.14 doesn't run on Java 25,
+which is what Android Studio currently bundles.
+
+**First run checklist:**
+
+1. ✅ `npm run new-client -- daisy com.daisy.rewards "Daisy Rewards"`, add a
+   test `clients/daisy/logo.png`.
+2. ✅ `npm run build-client -- daisy`. The icon background and the splash
+   (light and dark) use the colors from `client.json`, and a debug APK
+   compiles as `com.daisy.rewards`.
+3. ⏳ Run it on a device/emulator: launcher name, icon and splash should be
+   Daisy's.
+4. ✅ `npm run reset-client`, then `git status` — clean.
 
 ## iOS
 

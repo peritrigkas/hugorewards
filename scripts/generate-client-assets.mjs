@@ -30,6 +30,10 @@ const ok = run("npx", [
   client.iconBackgroundColor,
   "--splashBackgroundColor",
   client.splashBackgroundColor,
+  // Without this the dark-mode splash (drawable-night*) falls back to
+  // capacitor-assets' default #111111 instead of the client's color.
+  "--splashBackgroundColorDark",
+  client.splashBackgroundColor,
 ]);
 if (!ok) {
   console.error(
