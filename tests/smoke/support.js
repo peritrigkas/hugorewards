@@ -64,10 +64,12 @@ export async function openCustomer(page, code) {
 }
 
 // A card in the open customer view ("Main card" or a promo's name): its
-// "<stamps> / <total> stamps" line and its "+ Stamp" / "Redeem" button.
+// "<stamps> / <total> stamps" line, its "+ Stamp" / "Redeem" button, and on a
+// full card "+ Stamp, keep reward".
 export const cardLine = (page, name) => page.getByTestId("card-line").filter({ hasText: name });
 export const cardLineStamps = (page, name) => cardLine(page, name).getByTestId("card-line-stamps");
-export const cardLineButton = (page, name) => cardLine(page, name).getByRole("button", { name: /Stamp|Redeem/ });
+export const cardLineButton = (page, name) => cardLine(page, name).getByTestId("card-line-action");
+export const cardLineKeepButton = (page, name) => cardLine(page, name).getByTestId("card-line-keep");
 
 // Staff type (or a hardware scanner "types") a customer's code.
 export async function typeCode(page, code) {

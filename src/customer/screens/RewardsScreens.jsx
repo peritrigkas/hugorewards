@@ -54,6 +54,7 @@ export function RewardsHome({ goToCards, goToGifts }) {
 export function LoyaltyCardDetail({ customer, promoCards, pastCards, today }) {
   const [tab, setTab] = useState("active");
   const tabs = [["active", `Active (${1 + promoCards.length})`], ["past", "Past cards"]];
+  const waiting = pastCards.filter((card) => card.outcome === "ready").length;
   return (
     <div style={{ paddingBottom: 60 }}>
       <div style={{ display: "flex", padding: "20px 20px 0" }}>
@@ -65,6 +66,11 @@ export function LoyaltyCardDetail({ customer, promoCards, pastCards, today }) {
       </div>
       {tab === "active" ? (
         <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+          {waiting > 0 && (
+            <div data-testid="waiting-rewards-note" onClick={() => setTab("past")} style={{ background: "var(--c-gold)", borderRadius: 16, padding: "14px 16px", fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", cursor: "pointer" }}>
+              <b>🎁 {waiting === 1 ? "You have a reward" : `You have ${waiting} rewards`} waiting.</b> Show staff your code to claim. See Past cards.
+            </div>
+          )}
           <MainCard customer={customer} />
           {promoCards.map((card) => <PromoCard key={card.promo.id} card={card} today={today} />)}
         </div>
@@ -74,7 +80,7 @@ export function LoyaltyCardDetail({ customer, promoCards, pastCards, today }) {
         </div>
       ) : (
         <div style={{ padding: "40px 20px", textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-faint)" }}>
-          No past cards yet — your redeemed and expired cards will show up here.
+          No past cards yet. Your rewards waiting to be claimed, and your redeemed and expired cards, will show up here.
         </div>
       )}
     </div>

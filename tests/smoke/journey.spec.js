@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 import { clientConfig } from "../../src/client.config.js";
 import { admin, must } from "../support/scratch.js";
 import {
-  cardLineButton, cardLineStamps, joinAsCustomer, openCustomer, openLoyaltyCards, signInAsStaff, staffRow, staffRowStamps, typeCode,
+  cardLineButton, cardLineKeepButton, cardLineStamps, joinAsCustomer, openCustomer, openLoyaltyCards, signInAsStaff, staffRow, staffRowStamps, typeCode,
 } from "./support.js";
 
 const smokeContact = (slug) => `smoke-${randomBytes(3).toString("hex")}-${slug}@test.local`;
@@ -113,7 +113,7 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
     await expect(page.getByPlaceholder("Your name")).toBeVisible();
   });
 
-  await test.step("staff fill the card and redeem the reward", async () => {
+  await test.step("staff fill the card; another stamp keeps the reward waiting and starts a new card", async () => {
     const stampLine = cardLineStamps(staff, "Main card");
     const button = cardLineButton(staff, "Main card");
     for (let n = 2; n <= stampsForReward; n++) {
@@ -121,18 +121,46 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
       await expect(stampLine).toHaveText(`${n} / ${stampsForReward} stamps`);
     }
     await expect(button).toHaveText("Redeem");
-    await button.click();
-    await expect(staff.getByText("✓ Reward redeemed")).toBeVisible();
-    await expect(stampLine).toHaveText(`0 / ${stampsForReward} stamps`);
-    await expect(phone2.getByText(`0/${stampsForReward}`, { exact: true })).toBeVisible();
+    await cardLineKeepButton(staff, "Main card").click();
+    await expect(stampLine).toHaveText(`1 / ${stampsForReward} stamps`);
+    await expect(staff.getByTestId("waiting-reward")).toHaveCount(1);
+    await expect(phone2.getByText(`1/${stampsForReward}`, { exact: true })).toBeVisible();
   });
-  await staffContext.close();
 
-  await test.step("the redeemed card is in the customer's past cards", async () => {
-    await openLoyaltyCards(phone2, "Past cards");
+  await test.step("the customer sees the reward waiting in past cards", async () => {
+    await openLoyaltyCards(phone2, "Active (1)");
+    await phone2.getByTestId("waiting-rewards-note").click();
     await expect(phone2.getByTestId("past-card")).toHaveCount(1);
+    await expect(phone2.getByTestId("past-card")).toContainText("READY TO CLAIM");
+  });
+
+  await test.step("staff see it in the list; a scan still stamps, then opens the customer as a reminder", async () => {
+    await staff.getByLabel("Back").click();
+    await expect(staffRow(staff, code).getByTestId("customer-row-rewards")).toHaveText("1 to claim");
+    await typeCode(staff, code);
+    await expect(staff.getByTestId("customer-view-message")).toContainText("✓ Added a stamp");
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`2 / ${stampsForReward} stamps`);
+    await expect(staff.getByTestId("waiting-reward")).toHaveCount(1);
+  });
+
+  await test.step("redeeming the waiting reward marks it redeemed", async () => {
+    await staff.getByTestId("waiting-reward").getByRole("button", { name: "Redeem" }).click();
+    await expect(staff.getByText("✓ Reward redeemed")).toBeVisible();
+    await expect(staff.getByTestId("waiting-rewards")).toBeHidden();
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`2 / ${stampsForReward} stamps`);
     await expect(phone2.getByTestId("past-card")).toContainText("REDEEMED");
   });
+
+  await test.step("scanning a full card stamps it too, keeping the reward waiting", async () => {
+    must(await admin.from("customers").update({ stamps: stampsForReward }).eq("code", code));
+    await staff.getByLabel("Back").click();
+    await expect(staffRowStamps(staff, code)).toContainText(`Main ${stampsForReward}/`);
+    await typeCode(staff, code);
+    await expect(staff.getByTestId("customer-view-message")).toContainText("now a reward waiting");
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`1 / ${stampsForReward} stamps`);
+    await expect(staff.getByTestId("waiting-reward")).toHaveCount(1);
+  });
+  await staffContext.close();
 
   await test.step("delete the account", async () => {
     await phone2.getByTestId("open-account").click();

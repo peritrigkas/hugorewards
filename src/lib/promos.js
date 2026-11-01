@@ -49,22 +49,37 @@ export function activePromoCards(promos, stampsByPromo, today) {
     .sort((a, b) => a.promo.starts_on.localeCompare(b.promo.starts_on));
 }
 
-// One customer's finished cards, newest first: every redeemed card (from
-// card_history) and every promo card with stamps that wasn't redeemed in
-// time. An unfinished card expires when its promo ends; a full one when the
-// claim window closes. Empty promo cards aren't kept.
-export function pastCards({ history, promos, stampsByPromo, today, timeZone }) {
-  const redeemed = history.map((h) => ({
-    key: `redeemed-${h.id}`,
-    outcome: "redeemed",
-    day: shopToday(timeZone, new Date(h.finished_at)),
-    at: h.finished_at,
-    name: h.card_name,
-    icon: h.icon,
-    isMain: !h.promo_id,
-    stamps: h.stamps,
-    stampsForReward: h.stamps_for_reward,
-  }));
+// A history row moved to Past cards by a stamp on a full card, not redeemed
+// yet: waiting until its claim_by time, expired after it.
+const isWaiting = (h, now) => h.outcome === "ready" && new Date(h.claim_by) >= now;
+
+// Rewards waiting to be claimed, oldest first, from card_history rows (one
+// customer's, or filter them first).
+export const waitingRewards = (history, now = new Date()) =>
+  history.filter((h) => isWaiting(h, now)).sort((a, b) => a.finished_at.localeCompare(b.finished_at));
+
+// One customer's finished cards: rewards waiting to be claimed first (oldest
+// first), then the rest newest first. From card_history: waiting, redeemed,
+// and waiting rewards that weren't claimed in time (expired). Plus every
+// promo card with stamps that wasn't redeemed in time: an unfinished card
+// expires when its promo ends; a full one when the claim window closes. Empty
+// promo cards aren't kept.
+export function pastCards({ history, promos, stampsByPromo, today, timeZone, now = new Date() }) {
+  const fromHistory = history.map((h) => {
+    const outcome = h.outcome === "ready" ? (isWaiting(h, now) ? "ready" : "expired") : "redeemed";
+    const at = outcome === "redeemed" ? h.finished_at : h.claim_by;
+    return {
+      key: `history-${h.id}`,
+      outcome,
+      day: shopToday(timeZone, new Date(at)),
+      at,
+      name: h.card_name,
+      icon: h.icon,
+      isMain: !h.promo_id,
+      stamps: h.stamps,
+      stampsForReward: h.stamps_for_reward,
+    };
+  });
   const expired = promos.flatMap((promo) => {
     const stamps = stampsByPromo[promo.id] ?? 0;
     if (stamps === 0) return [];
@@ -82,7 +97,10 @@ export function pastCards({ history, promos, stampsByPromo, today, timeZone }) {
       stampsForReward: promo.stamps_for_reward,
     }];
   });
-  return [...redeemed, ...expired].sort((a, b) => b.day.localeCompare(a.day) || b.at.localeCompare(a.at));
+  const all = [...fromHistory, ...expired];
+  const ready = all.filter((c) => c.outcome === "ready").sort((a, b) => a.at.localeCompare(b.at));
+  const done = all.filter((c) => c.outcome !== "ready").sort((a, b) => b.day.localeCompare(a.day) || b.at.localeCompare(a.at));
+  return [...ready, ...done];
 }
 
 // Staff "Scans add to" setting: "main", "promo" or "ask". With no promo

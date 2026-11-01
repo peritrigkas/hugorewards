@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { clientConfig } from "../client.config";
-import { addStamp, deletePromo as deletePromoInDb, listHistory, listPromos, listPromoStamps, redeemCard, savePromo as savePromoInDb } from "../lib/cards";
+import { addStamp, deletePromo as deletePromoInDb, listHistory, listPromos, listPromoStamps, redeemCard, redeemWaitingReward, savePromo as savePromoInDb } from "../lib/cards";
 import { listCustomers, moveCard as moveCardInDb, subscribeToAllCustomers } from "../lib/customers";
 import { isStaffSession } from "../lib/customerAuth";
 import { getStaffSession, onStaffSessionChange, signOutStaff } from "../lib/staffAuth";
@@ -59,6 +59,12 @@ export function useOwnerCustomers() {
     return error;
   };
 
+  const redeemWaiting = async (reward) => {
+    const error = await redeemWaitingReward(reward.id);
+    if (!error) await fetchAll();
+    return error;
+  };
+
   const moveCard = async (oldCode, newCode) => {
     const error = await moveCardInDb(oldCode, newCode);
     if (!error) await fetchAll();
@@ -81,5 +87,5 @@ export function useOwnerCustomers() {
     await signOutStaff();
   };
 
-  return { session, customerOnDevice, customers, cards, loading, stamp, redeem, moveCard, savePromo, deletePromo, signOut };
+  return { session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, moveCard, savePromo, deletePromo, signOut };
 }

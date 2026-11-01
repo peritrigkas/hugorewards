@@ -50,20 +50,29 @@ export function PromoCard({ card, today }) {
   );
 }
 
-// A redeemed or expired card: a faded copy with a mark across it.
+// The mark across a past card: its text and colors.
+const PAST_MARKS = {
+  ready: { label: "READY TO CLAIM", until: "by ", border: "var(--c-gold)", color: "var(--c-dark)", background: "var(--c-gold)" },
+  redeemed: { label: "REDEEMED", until: "", border: "var(--c-gold)", color: "var(--c-gold)", background: "rgba(255,255,255,0.85)" },
+  expired: { label: "EXPIRED", until: "", border: "var(--c-inactive)", color: "var(--c-muted)", background: "rgba(255,255,255,0.85)" },
+};
+
+// A finished card with a mark across it: a reward waiting to be claimed (a
+// full card that got another stamp before it was redeemed), or a faded copy
+// of a redeemed or expired card.
 export function PastCard({ card }) {
-  const redeemed = card.outcome === "redeemed";
+  const mark = PAST_MARKS[card.outcome];
   const name = card.isMain ? `${clientConfig.brandName} Loyalty Card` : card.name;
   const icon = card.icon ?? (card.isMain ? clientConfig.loyalty.stampIcon : undefined);
   return (
     <div data-testid="past-card" style={{ ...cardBox, padding: "24px 20px", marginBottom: 16 }}>
-      <div style={{ opacity: 0.45, filter: "grayscale(0.6)" }}>
+      <div style={card.outcome === "ready" ? { opacity: 0.7 } : { opacity: 0.45, filter: "grayscale(0.6)" }}>
         <div style={{ ...title, marginBottom: 16 }}>{name}</div>
         <StampCard stamps={card.stamps} stampsForReward={card.stampsForReward} icon={icon} />
       </div>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-        <div style={{ transform: "rotate(-14deg)", border: `3px solid ${redeemed ? "var(--c-gold)" : "var(--c-inactive)"}`, color: redeemed ? "var(--c-gold)" : "var(--c-muted)", background: "rgba(255,255,255,0.85)", borderRadius: 10, padding: "6px 16px", fontFamily: "Inter, sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: 1.5, whiteSpace: "nowrap" }}>
-          {redeemed ? "REDEEMED" : "EXPIRED"} · {formatDay(card.day)}
+        <div style={{ transform: "rotate(-14deg)", border: `3px solid ${mark.border}`, color: mark.color, background: mark.background, borderRadius: 10, padding: "6px 16px", fontFamily: "Inter, sans-serif", fontWeight: 800, fontSize: card.outcome === "ready" ? 17 : 20, letterSpacing: 1.5, whiteSpace: "nowrap" }}>
+          {mark.label} · {mark.until}{formatDay(card.day)}
         </div>
       </div>
     </div>
