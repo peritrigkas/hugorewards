@@ -23,7 +23,7 @@ function CardLine({ name, stamps, stampsForReward, note, full, canStamp, busy, o
           {stamps} / {stampsForReward} stamps{note && ` · ${note}`}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 6 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 6 }}>
         {full && canStamp && (
           <button data-testid="card-line-keep" disabled={busy} onClick={onStamp} style={{ ...pill, background: "var(--c-border)", color: "var(--c-dark)" }}>+ Stamp, keep reward</button>
         )}

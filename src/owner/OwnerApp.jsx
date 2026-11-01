@@ -51,11 +51,11 @@ export function OwnerApp({ onExit }) {
     setScanSettingState(setting);
   };
 
-  // A scan stamps the chosen card straight away, as before promos. It opens
-  // the customer view instead when staff asked for that, or when the card is
-  // full, so staff can redeem it (or stamp, which keeps the reward waiting).
-  // When the customer has a reward waiting, it stamps and then opens the
-  // view, so staff can remind them before they pay.
+  // A scan stamps the chosen card straight away, as before promos; on a full
+  // card that keeps the reward waiting and starts a new card. It opens the
+  // customer view instead when staff asked for that. When the customer then
+  // has a reward waiting, it also opens the view after stamping, so staff can
+  // remind them before they pay (and redeem it there).
   const handleScan = async (code) => {
     const customer = customers.find((c) => c.code === code);
     if (!customer) return { message: "No customer found for that code" };
@@ -63,14 +63,14 @@ export function OwnerApp({ onExit }) {
     const full = target.kind === "promo"
       ? isPromoCardFull(promo, stampsByCustomer[customer.id]?.[promo.id] ?? 0)
       : isRewardReady(customer.stamps, STAMPS_FOR_REWARD);
-    if (target.kind === "ask" || full) {
+    if (target.kind === "ask") {
       setScanMessage("");
       setOpenCode(code);
       return { message: "" };
     }
     const result = await stamp(customer, target.kind === "promo" ? promo : null);
-    if (result.ok && rewardsOf(customer).length > 0) {
-      setScanMessage(result.message);
+    if (result.ok && (full || rewardsOf(customer).length > 0)) {
+      setScanMessage(full ? `${result.message}. Their full card is now a reward waiting` : result.message);
       setOpenCode(code);
     }
     return result;

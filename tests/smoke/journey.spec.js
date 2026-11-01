@@ -150,6 +150,16 @@ test("customer joins, gets stamped, logs out and back in, gets their stamps on a
     await expect(cardLineStamps(staff, "Main card")).toHaveText(`2 / ${stampsForReward} stamps`);
     await expect(phone2.getByTestId("past-card")).toContainText("REDEEMED");
   });
+
+  await test.step("scanning a full card stamps it too, keeping the reward waiting", async () => {
+    must(await admin.from("customers").update({ stamps: stampsForReward }).eq("code", code));
+    await staff.getByLabel("Back").click();
+    await expect(staffRowStamps(staff, code)).toContainText(`Main ${stampsForReward}/`);
+    await typeCode(staff, code);
+    await expect(staff.getByTestId("customer-view-message")).toContainText("now a reward waiting");
+    await expect(cardLineStamps(staff, "Main card")).toHaveText(`1 / ${stampsForReward} stamps`);
+    await expect(staff.getByTestId("waiting-reward")).toHaveCount(1);
+  });
   await staffContext.close();
 
   await test.step("delete the account", async () => {
