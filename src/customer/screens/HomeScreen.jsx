@@ -115,7 +115,7 @@ function ProgressSection({ customer }) {
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "var(--c-gold)", fontWeight: 700, whiteSpace: "nowrap" }}>{customer.stamps}/{STAMPS_FOR_REWARD}</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 8 }}>{clientConfig.loyalty.progressLabel(STAMPS_FOR_REWARD)}</div>
+          <div style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-dark)", marginBottom: 8 }}>{clientConfig.loyalty.progressLabel.replace("{n}", STAMPS_FOR_REWARD)}</div>
           <div style={{ position: "relative" }}>
             <div style={{ height: 14, borderRadius: 999, background: "var(--c-border)", border: "2px solid var(--c-dark)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: "var(--c-gold)", borderRadius: 999, transition: "width 0.3s ease" }} />

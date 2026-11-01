@@ -45,13 +45,16 @@ export const clientConfig = {
     codePrefix: "HUGO",
     earnCardBody: "Buy 9, the 10th's on the cow.",
     cardsPromoBody: "Get a stamp on your Hugo card for every coffee — buy 9, and the 10th's on the cow.",
+    giftsPromoBody: "Check what's waiting for you — like a free coffee on your birthday.",
     // Icon on each stamp of the loyalty card: "cow" (Hugo's cow card, 9-stamp
     // cards only) or one of bean, coffee, croissant, cookie, ice-cream, leaf,
     // flower, scissors, dumbbell, paw, heart, star, cake, sandwich, salad,
     // pizza, soda — see STAMP_ICONS in components/StampCard.jsx.
     // Anything else draws plain filled circles.
     stampIcon: "cow",
-    progressLabel: (n) => `Collect ${n} stamps for a free coffee`,
+    // A string rather than a function so a tenants row can override it; {n}
+    // is replaced with stampsForReward.
+    progressLabel: "Collect {n} stamps for a free coffee",
   },
 
   hero: {
