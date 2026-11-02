@@ -116,7 +116,8 @@ client's app ships.
     Tested on a phone (Pretty Pretty debug build) 2026-11-01
   - [x] Release Hugo as 1.0.6 (versionCode 7) — published 2026-11-02 ([#34](https://github.com/peritrigkas/hugorewards/pull/34))
 - [ ] **Second client: Pretty Pretty** (nail salon, slug `prettypretty`,
-  code prefix `PP`, Android only for now)
+  code prefix `PP`, Android only for now). A **demo**: there is no real salon,
+  so it stays in Play testing as a sales demo and does not go to production
   - [x] `tenants` row on live (2026-11-01): lilac/pink palette, 9 stamps +
     1 free, heart stamps, salon wording and services list, "Services" tab.
     Tested on scratch first; live config matches scratch exactly
@@ -140,7 +141,14 @@ client's app ships.
   - [x] Install on a phone (debug build, 2026-11-01): name, icon, join, scan,
     stamp, redeem, waiting rewards. AVG flags the sideloaded debug APK as
     "suspicious" (expected for a debug-signed app from outside Play)
-  - [ ] Play Console listing, signed AAB, release
+  - [x] Play listing kit and legal pages (2026-11-02, [#36](https://github.com/peritrigkas/hugorewards/pull/36)):
+    `clients/prettypretty/play/`, privacy policy and data deletion on GitHub Pages
+  - [x] Signed AAB 1.0.0 (versionCode 1, its own upload key; per-client version
+    in `client.json`, [#38](https://github.com/peritrigkas/hugorewards/pull/38)),
+    in Play testing 2026-11-02
+  - [ ] Production: not planned while it is a demo. A real salon would get its
+    own app; a new personal Play account must run a closed test (12 testers,
+    14 days) first
 
 ## Decisions log
 
@@ -176,6 +184,7 @@ section it updates or overrides.
 | 2026-10-30 | Bot check is Cloudflare **Turnstile** on anonymous sign-in and staff password sign-in, shipped in its own release (1.0.4) after the 1.0.3 go-live; the widget allows hostname `localhost` instead of giving the Android app its own hostname | Turnstile is free and mostly invisible (a checkbox only for suspicious traffic), and Supabase supports it natively. Supabase's CAPTCHA setting covers every sign-in, so staff sign-in sends a token too. Allowing `localhost` keeps the Android WebView origin (`https://localhost`) unchanged; a new origin would wipe every phone's saved login, and with it the card. The trade-off is a weaker hostname restriction; the challenge itself is the protection. A separate release keeps 1.0.3 in review instead of resubmitting | §3 Option B |
 | 2026-10-30 | "Move card" adds the old card's stamps to the card on the customer's current phone and deletes the old card, instead of moving the old card (code and all) onto the phone and deleting the new one | First live test: staff typed the two codes the wrong way round, which moved an empty card onto a phone and deleted a 4-stamp card; a second tap on a stale "possible earlier card" hint took a card off the phone that had just received it. Adding stamps can never lose any, whichever way round the cards are picked, and the phone always keeps the code it shows. The hint now shows only on the newest card with a matching contact | §3 Option B |
 | 2026-10-30 | Staff sign-in on a customer's phone keeps that phone's anonymous refresh token and restores it on staff sign-out; reopening while signed in as staff opens the dashboard; staff sign-out is local to the device | A phone holds one login at a time, so staff sign-in replaced the customer account and, after signing out, joining again made a new card. Owners test (and small shops work) on their own phone, so the card has to survive. Signing staff out only on this device stops one phone's sign-out from logging out every other staff device | §3 Option B |
+| 2026-11-02 | Pretty Pretty stays a demo in Play testing, not production | There is no real salon: a public listing with a made-up address and phone would mislead users and risks a Play rejection on the account that also publishes Hugo. Testing tracks let prospects install it from Play | — |
 
 ## Deviations from the original strategy doc
 
