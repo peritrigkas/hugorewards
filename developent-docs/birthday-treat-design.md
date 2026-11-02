@@ -2,7 +2,7 @@
 
 Status: **agreed** (2026-11-02). Database built and tested on scratch
 (`supabase-birthday-treats.sql`, `tests/db/birthday.test.js`); applied to live
-2026-11-02. App screens built and tested locally; not yet released.
+2026-11-02. App released in Hugo 1.0.7 (published 2026-11-02).
 
 Every shop's config has a birthday gift (`gift.title` / `gift.body`, e.g.
 Hugo's "Birthday Coffee"), but until now the app never asked for a birthday,
