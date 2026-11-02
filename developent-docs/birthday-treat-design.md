@@ -1,8 +1,8 @@
 # Birthday treat: design
 
 Status: **agreed** (2026-11-02). Database built and tested on scratch
-(`supabase-birthday-treats.sql`, `tests/db/birthday.test.js`); not on live yet.
-App screens built; not yet released.
+(`supabase-birthday-treats.sql`, `tests/db/birthday.test.js`); applied to live
+2026-11-02. App screens built and tested locally; not yet released.
 
 Every shop's config has a birthday gift (`gift.title` / `gift.body`, e.g.
 Hugo's "Birthday Coffee"), but until now the app never asked for a birthday,

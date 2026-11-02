@@ -9,6 +9,12 @@
 --
 -- Builds on supabase-promo-cards.sql. Tests: tests/db/birthday.test.js.
 -- Additive: apps up to 1.0.6 never send the new columns and keep working.
+--
+-- Applied to scratch and live 2026-11-02 as migration `birthday_treats`.
+-- Expected security-advisor warnings afterwards, the same kinds as for promo
+-- cards: redeem_birthday_treat is a SECURITY DEFINER function signed-in users
+-- can call (it checks the caller is staff of the card's shop), and
+-- birthday_treats has policies that anonymous (customer) accounts use.
 
 -- 1. The birthday --------------------------------------------------------------------
 alter table public.customers add column if not exists birthday_month smallint;

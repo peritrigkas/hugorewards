@@ -124,7 +124,8 @@ client's app ships.
   - [x] App: My Account birthday, Home banner and My Gifts status; staff
     🎂 badge, reminder after a scan, Redeem and Correct in the customer view
   - [x] Privacy policy and data-deletion pages (Hugo and Pretty Pretty)
-  - [ ] Apply the SQL to live
+  - [x] SQL applied to live 2026-11-02 (migration `birthday_treats`); live
+    and scratch definitions match
   - [ ] Release Hugo as 1.0.7 (versionCode 8); Play data safety: add
     Personal info → Other info (optional)
 - [ ] **Second client: Pretty Pretty** (nail salon, slug `prettypretty`,
