@@ -23,24 +23,6 @@ Use internal testing until they're real, then retake that screenshot.
 ### Full description (4000 max)
 
 ```
-Pretty Pretty Rewards is the loyalty card for Pretty Pretty nail salon, right on your phone.
-
-COLLECT HEARTS
-Get a heart on your card every time you visit. After 9 visits, your 10th treatment is on us.
-
-NEVER LOSE A REWARD
-Not ready to use your free treatment yet? Keep collecting. Your reward waits for you in Past cards until you claim it.
-
-ONE CODE, NO PAPER
-Just show your code at the desk. Staff scan it and your heart appears straight away. No paper card to lose, no app login to remember.
-
-EVERYTHING IN ONE PLACE
-• Your loyalty card and progress at a glance
-• Our services: manicures, Gel & BIAB, acrylics and extensions, nail art and pedicures
-• Opening hours, address and contact details
-• Special promo cards when we run limited-time offers
-
-Join in seconds with just your name and a phone number or email. No payment details, ever.
 ```
 
 ## App content (Policy → App content)
