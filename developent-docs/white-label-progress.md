@@ -103,7 +103,7 @@ client's app ships.
     stamping uses `add_stamp`
   - [x] SQL applied to live 2026-10-31 (migration `promo_cards`)
   - [x] Release the app as 1.0.5 (versionCode 6) — published 2026-11-01 ([#27](https://github.com/peritrigkas/hugorewards/pull/27))
-- [ ] **Waiting rewards** (`developent-docs/promo-cards-design.md`, "Waiting rewards")
+- [x] **Waiting rewards** (`developent-docs/promo-cards-design.md`, "Waiting rewards") (live 2026-11-02: Android 1.0.6 published)
   ([#33](https://github.com/peritrigkas/hugorewards/pull/33)): a stamp on a full
   card (a scan included) keeps the reward waiting in Past cards as READY TO CLAIM
   and starts a new card; it expires after 6 months (main) / 1 month (promo).
@@ -114,7 +114,7 @@ client's app ships.
   - [x] App: staff "+ Stamp, keep reward", "N to claim", reminder after a scan,
     Redeem per waiting reward; customer "reward waiting" note and Past cards.
     Tested on a phone (Pretty Pretty debug build) 2026-11-01
-  - [ ] Release Hugo as 1.0.6 (versionCode 7)
+  - [x] Release Hugo as 1.0.6 (versionCode 7) — published 2026-11-02 ([#34](https://github.com/peritrigkas/hugorewards/pull/34))
 - [ ] **Second client: Pretty Pretty** (nail salon, slug `prettypretty`,
   code prefix `PP`, Android only for now)
   - [x] `tenants` row on live (2026-11-01): lilac/pink palette, 9 stamps +
