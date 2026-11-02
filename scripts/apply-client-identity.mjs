@@ -66,8 +66,15 @@ gradle = replaceRequired(
   (_, prefix) => `${prefix}"${appId}"`,
   `"applicationId" in ${gradlePath}`
 );
+// A client's own Play version, if client.json sets one (a new app starts at 1).
+if (client.versionCode !== undefined) {
+  gradle = replaceRequired(gradle, /(versionCode\s*=?\s*)\d+/, (_, prefix) => `${prefix}${client.versionCode}`, `"versionCode" in ${gradlePath}`);
+  gradle = replaceRequired(gradle, /(versionName\s*=?\s*)"[^"]+"/, (_, prefix) => `${prefix}"${client.versionName}"`, `"versionName" in ${gradlePath}`);
+}
 writeFileSync(gradlePath, gradle);
-console.log(`Updated ${gradlePath}: ${oldAppId} -> ${appId}`);
+const version = gradle.match(/versionCode\s*=?\s*(\d+)/)?.[1];
+const versionName = gradle.match(/versionName\s*=?\s*"([^"]+)"/)?.[1];
+console.log(`Updated ${gradlePath}: ${oldAppId} -> ${appId}, version ${versionName} (${version})`);
 
 // 3. strings.xml ----------------------------------------------------------
 const stringsPath = "android/app/src/main/res/values/strings.xml";

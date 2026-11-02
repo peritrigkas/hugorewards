@@ -87,7 +87,6 @@ Use the same answers as Hugo (same app, same backend):
 - Track: **Internal testing** first (add testers' emails). No review wait.
 - App signing: let Google manage the app signing key (Play App Signing);
   upload with a **new upload key for Pretty Pretty**, not Hugo's.
-- Version: the bundle uses the shared `android/` version (1.0.6, code 7
-  today). Fine for a first upload; each later Pretty Pretty upload needs a
-  higher versionCode.
+- Version: 1.0.0 (versionCode 1), set in `clients/prettypretty/client.json`.
+  Raise both there for each later upload.
 - Release notes: "First release of Pretty Pretty Rewards."

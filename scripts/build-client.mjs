@@ -60,7 +60,11 @@ for (const step of steps) {
 }
 
 console.log(`\n${slug} is ready in android/. Remaining manual steps:`);
-console.log("  1. Bump versionCode/versionName in android/app/build.gradle.");
+console.log(
+  client.versionCode !== undefined
+    ? `  1. Version ${client.versionName} (${client.versionCode}) comes from clients/${slug}/client.json: raise it there for each new upload.`
+    : "  1. Bump versionCode/versionName in android/app/build.gradle."
+);
 console.log("  2. npx cap open android — build a signed AAB from Android Studio.");
 console.log("  3. Upload to the Play Console under this client's own listing.");
 if (!isBaseline) {
