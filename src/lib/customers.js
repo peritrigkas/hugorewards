@@ -21,6 +21,14 @@ export async function updateCustomerDetails(code, { name, contact }) {
   return error ? null : data;
 }
 
+// Saves the birthday (month and day, or both null to remove it). A customer's
+// second save locks it; staff can always change it. Resolves to { customer }
+// or { error } (the reason it was refused).
+export async function updateBirthday(code, month, day) {
+  const { data, error } = await supabase.from("customers").update({ birthday_month: month, birthday_day: day }).eq("code", code).select().single();
+  return error ? { error: error.message } : { customer: data };
+}
+
 // True only if a row was actually deleted.
 export async function deleteCustomer(code) {
   const { error, count } = await supabase.from("customers").delete({ count: "exact" }).eq("code", code);

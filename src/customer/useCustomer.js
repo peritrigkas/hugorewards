@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { clientConfig } from "../client.config";
-import { listHistory, listPromos, listPromoStamps } from "../lib/cards";
+import { birthdayTreat } from "../lib/birthday";
+import { listBirthdayTreats, listHistory, listPromos, listPromoStamps } from "../lib/cards";
 import {
-  contactHasOtherCard, createCustomer, deleteCustomer, getMyCustomer, subscribeToMyCustomer, updateCustomerDetails,
+  contactHasOtherCard, createCustomer, deleteCustomer, getMyCustomer, subscribeToMyCustomer, updateBirthday, updateCustomerDetails,
 } from "../lib/customers";
 import { ensureCustomerSession, getDeviceSession, isStaffSession } from "../lib/customerAuth";
 import { isLoggedOut, setLoggedOut } from "../lib/loggedOut";
@@ -14,13 +15,15 @@ import { signOutStaff } from "../lib/staffAuth";
 // The branded loading screen always shows for at least this long on launch.
 const MIN_LOADING_MS = 3000;
 
-const NO_CARDS = { promos: [], promoStamps: [], history: [] };
+const NO_CARDS = { promos: [], promoStamps: [], history: [], birthdayTreats: [] };
 
-// The shop's promos and this customer's promo stamps and redeemed cards. A
-// failed read shows as none, so the main card still works.
+// The shop's promos and this customer's promo stamps, redeemed cards and
+// birthday treats. A failed read shows as none, so the main card still works.
 async function loadCards() {
-  const [promos, promoStamps, history] = await Promise.all([listPromos(clientConfig.tenantId), listPromoStamps(), listHistory()]);
-  return { promos: promos ?? [], promoStamps: promoStamps ?? [], history: history ?? [] };
+  const [promos, promoStamps, history, birthdayTreats] = await Promise.all([
+    listPromos(clientConfig.tenantId), listPromoStamps(), listHistory(), listBirthdayTreats(),
+  ]);
+  return { promos: promos ?? [], promoStamps: promoStamps ?? [], history: history ?? [], birthdayTreats: birthdayTreats ?? [] };
 }
 
 // The card belonging to this device's (anonymous) account, kept in sync with
@@ -92,6 +95,15 @@ export function useCustomer() {
     return true;
   };
 
+  // Month and day, or both null to remove it. Resolves to null, or the reason
+  // it was refused (e.g. the birthday is locked).
+  const saveBirthday = async (month, day) => {
+    const { customer: data, error } = await updateBirthday(customer.code, month, day);
+    if (error) return error;
+    setCustomer(data);
+    return null;
+  };
+
   // Hides the card on this device; the account and card stay for logBackIn.
   const logout = () => {
     setLoggedOut(true);
@@ -128,13 +140,14 @@ export function useCustomer() {
   // The running promo, until the customer dismisses its "New" banner.
   const current = runningPromo(cards.promos, today);
   const newPromo = current && !hasSeenPromo(current.id) ? current : null;
+  const birthday = birthdayTreat(customer ?? {}, cards.birthdayTreats, today);
   const dismissNewPromo = () => {
     markPromoSeen(newPromo.id);
     setSeenChanged((n) => n + 1);
   };
 
   return {
-    customer, loading, loggedOut, staffOnDevice, hasEarlierCard, today, promoCards, pastCards: past, newPromo,
-    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice, dismissNewPromo,
+    customer, loading, loggedOut, staffOnDevice, hasEarlierCard, today, promoCards, pastCards: past, newPromo, birthday,
+    join, saveDetails, saveBirthday, logout, logBackIn, deleteAccount, signOutStaffOnDevice, dismissNewPromo,
   };
 }

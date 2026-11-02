@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronRight, Gift } from "lucide-react";
 import { clientConfig } from "../../client.config";
+import { formatDay } from "../../lib/promos";
 import { MainCard, PastCard, PromoCard } from "../PromoCards";
 
 function RewardsHero() {
@@ -87,18 +88,36 @@ export function LoyaltyCardDetail({ customer, promoCards, pastCards, today }) {
   );
 }
 
-export function GiftsView() {
+// The birthday treat's status line (birthday: see birthdayTreat in lib/birthday.js).
+function birthdayLine(birthday) {
+  switch (birthday.kind) {
+    case "ready": return `🎂 Happy birthday! Your treat is ready until ${formatDay(birthday.until)}. Show your code at the desk.`;
+    case "redeemed": return "✓ Enjoyed this year. See you on your next birthday!";
+    case "upcoming": return `Ready from ${formatDay(birthday.from)} to ${formatDay(birthday.until)}.`;
+    default: return null;
+  }
+}
+
+export function GiftsView({ birthday, goToAccount }) {
+  const ready = birthday.kind === "ready";
   return (
     <div style={{ paddingBottom: 60 }}>
       <div style={{ padding: "24px 20px" }}>
         <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 22, color: "var(--c-dark)", marginBottom: 18 }}>My Gifts</div>
-        <div style={{ background: "var(--c-lilac)", borderRadius: 18, padding: "20px", display: "flex", alignItems: "center", gap: 16 }}>
+        <div data-testid="birthday-treat" style={{ background: ready ? "var(--c-gold)" : "var(--c-lilac)", borderRadius: 18, padding: "20px", display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ background: "#fff", borderRadius: "50%", width: 52, height: 52, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Gift color="var(--c-dark)" size={24} />
           </div>
           <div>
             <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: "var(--c-dark)" }}>{clientConfig.gift.title}</div>
             <div style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-darkAlt)", marginTop: 2 }}>{clientConfig.gift.body}</div>
+            {birthday.kind === "none" ? (
+              <div onClick={goToAccount} style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--c-dark)", marginTop: 8, cursor: "pointer", textDecoration: "underline" }}>
+                Add your birthday in My Account
+              </div>
+            ) : (
+              <div data-testid="birthday-treat-status" style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 600, color: "var(--c-dark)", marginTop: 8 }}>{birthdayLine(birthday)}</div>
+            )}
           </div>
         </div>
         <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: 13, color: "var(--c-faint)", marginTop: 24 }}>

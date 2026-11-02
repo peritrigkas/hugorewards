@@ -1,6 +1,80 @@
 import { useState } from "react";
+import { clientConfig } from "../../client.config";
+import { daysInMonth, formatBirthday, hasBirthday, isBirthdayLocked, MAX_BIRTHDAY_SAVES, MONTHS } from "../../lib/birthday";
 
-export function AccountScreen({ customer, onSave, onLogout, onDelete }) {
+const label = { fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--c-faint)", display: "block", marginBottom: 6 };
+const note = { fontFamily: "Inter, sans-serif", fontSize: 12, color: "var(--c-muted)", lineHeight: 1.5, marginBottom: 14 };
+const selectStyle = { flex: 1, padding: "12px 10px", borderRadius: 12, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 15, background: "#fff", color: "var(--c-dark)" };
+
+// Day and month, for the shop's birthday treat. A customer can save it
+// twice: the second save locks it, and only staff can change it after that.
+// Removing it doesn't count as a save.
+function BirthdayCard({ customer, onSave }) {
+  const [month, setMonth] = useState(customer.birthday_month ?? "");
+  const [day, setDay] = useState(customer.birthday_day ?? "");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const locked = isBirthdayLocked(customer);
+  const savesLeft = MAX_BIRTHDAY_SAVES - customer.birthday_saves;
+  const changed = Number(month) !== (customer.birthday_month ?? 0) || Number(day) !== (customer.birthday_day ?? 0);
+  const canSave = month && day && changed && !busy;
+
+  const save = async (m, d) => {
+    setBusy(true);
+    setMessage("");
+    const error = await onSave(m, d);
+    setBusy(false);
+    if (error) setMessage(error.includes("locked") ? error : "Couldn't save. Check your connection and try again.");
+    else setMessage(m ? "✓ Birthday saved" : "✓ Birthday removed");
+    if (!m && !error) { setMonth(""); setDay(""); }
+  };
+
+  return (
+    <div data-testid="birthday-card" style={{ background: "#fff", borderRadius: 20, padding: "24px 20px", border: "1px solid var(--c-border)", marginBottom: 20 }}>
+      <label style={label}>Birthday</label>
+      {locked ? (
+        <>
+          <div data-testid="birthday-locked" style={{ fontFamily: "Inter, sans-serif", fontSize: 15, fontWeight: 600, color: "var(--c-dark)", marginBottom: 6 }}>🔒 {formatBirthday(customer)}</div>
+          <div style={{ ...note, marginBottom: 0 }}>Your birthday is locked. If it's wrong, ask staff to correct it.</div>
+        </>
+      ) : (
+        <>
+          <div style={note}>
+            Add your birthday to get your {clientConfig.gift.title}.{" "}
+            {savesLeft === 1
+              ? <b>You can change it one more time: after that it's locked.</b>
+              : "You can change it once after saving it."}
+          </div>
+          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            <select aria-label="Birthday day" value={day} onChange={(e) => setDay(e.target.value)} style={selectStyle}>
+              <option value="">Day</option>
+              {Array.from({ length: month ? daysInMonth(Number(month)) : 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <select aria-label="Birthday month" value={month} onChange={(e) => { setMonth(e.target.value); if (Number(day) > daysInMonth(Number(e.target.value))) setDay(""); }} style={{ ...selectStyle, flex: 2 }}>
+              <option value="">Month</option>
+              {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            </select>
+          </div>
+          <button
+            disabled={!canSave}
+            onClick={() => save(Number(month), Number(day))}
+            style={{ width: "100%", background: canSave ? "var(--c-dark)" : "var(--c-lilac)", color: "var(--c-cream)", border: "none", padding: "13px", borderRadius: 999, fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, cursor: canSave ? "pointer" : "not-allowed" }}
+          >
+            {busy ? "Saving…" : savesLeft === 1 ? "Save and lock birthday" : "Save birthday"}
+          </button>
+          {hasBirthday(customer) && (
+            <button disabled={busy} onClick={() => save(null, null)} style={{ width: "100%", background: "transparent", color: "var(--c-muted)", border: "none", padding: "10px 0 0", fontFamily: "Inter, sans-serif", fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
+              Remove birthday
+            </button>
+          )}
+        </>
+      )}
+      {message && <p data-testid="birthday-message" style={{ fontFamily: "Inter, sans-serif", fontSize: 13, fontWeight: 600, color: message.startsWith("✓") ? "var(--c-dark)" : "var(--c-error)", margin: "12px 0 0" }}>{message}</p>}
+    </div>
+  );
+}
+
+export function AccountScreen({ customer, onSave, onSaveBirthday, onLogout, onDelete }) {
   const [name, setName] = useState(customer.name);
   const [contact, setContact] = useState(customer.contact || "");
   const [busy, setBusy] = useState(false);
@@ -65,6 +139,8 @@ export function AccountScreen({ customer, onSave, onLogout, onDelete }) {
             {busy ? "Saving…" : "Save changes"}
           </button>
         </div>
+
+        <BirthdayCard customer={customer} onSave={onSaveBirthday} />
 
         {!confirmingLogout ? (
           <button

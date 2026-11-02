@@ -43,6 +43,20 @@ export async function redeemWaitingReward(id) {
   return error ? error.message : null;
 }
 
+// Birthday treats given (supabase-birthday-treats.sql): a customer's own, or
+// staff's whole shop's.
+export async function listBirthdayTreats() {
+  const { data, error } = await supabase.from("birthday_treats").select("*");
+  return error ? null : data;
+}
+
+// Staff: gives the birthday treat, during the customer's birthday week, once a
+// year. Resolves to null, or the reason it was refused.
+export async function redeemBirthdayTreat(code) {
+  const { error } = await supabase.rpc("redeem_birthday_treat", { card_code: code });
+  return error ? error.message : null;
+}
+
 const OVERLAPPING_PROMO = "23P01"; // promos_no_overlap
 
 function promoError(error) {

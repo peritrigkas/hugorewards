@@ -115,6 +115,19 @@ client's app ships.
     Redeem per waiting reward; customer "reward waiting" note and Past cards.
     Tested on a phone (Pretty Pretty debug build) 2026-11-01
   - [x] Release Hugo as 1.0.6 (versionCode 7) — published 2026-11-02 ([#34](https://github.com/peritrigkas/hugorewards/pull/34))
+- [ ] **Birthday treat** (`developent-docs/birthday-treat-design.md`): customers
+  add their birthday (day and month) in My Account, can save it twice before
+  it locks, and staff redeem the shop's birthday gift once a year, on the
+  birthday or the 6 days after
+  - [x] Database: `supabase-birthday-treats.sql`, tested on scratch
+    2026-11-02 (migration `birthday_treats`). Additive: 1.0.6 keeps working
+  - [x] App: My Account birthday, Home banner and My Gifts status; staff
+    🎂 badge, reminder after a scan, Redeem and Correct in the customer view
+  - [x] Privacy policy and data-deletion pages (Hugo and Pretty Pretty)
+  - [x] SQL applied to live 2026-11-02 (migration `birthday_treats`); live
+    and scratch definitions match
+  - [ ] Release Hugo as 1.0.7 (versionCode 8); Play data safety: add
+    Personal info → Other info (optional)
 - [ ] **Second client: Pretty Pretty** (nail salon, slug `prettypretty`,
   code prefix `PP`, Android only for now). A **demo**: there is no real salon,
   so it stays in Play testing as a sales demo and does not go to production
