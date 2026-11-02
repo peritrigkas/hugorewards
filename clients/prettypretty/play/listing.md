@@ -18,7 +18,7 @@ Use internal testing until they're real, then retake that screenshot.
 | Phone screenshots (2–8, 1080×2160) | `screenshots/1-home.png` … `6-find-us.png`, in that order |
 | Category | Beauty |
 | Contact email | *your choice: the salon's, or yours as with Hugo* |
-| Privacy policy URL | where `legal/prettypretty-privacy-policy.html` is hosted (replace `[CONTACT EMAIL]` in both legal pages first) |
+| Privacy policy URL | https://peritrigkas.github.io/hugorewards/legal/prettypretty-privacy-policy.html (live once this PR is merged: GitHub Pages serves master) |
 
 ### Full description (4000 max)
 
