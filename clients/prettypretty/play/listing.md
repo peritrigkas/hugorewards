@@ -23,6 +23,44 @@ Use internal testing until they're real, then retake that screenshot.
 ### Full description (4000 max)
 
 ```
+Pretty Pretty Rewards is the official loyalty app for Pretty Pretty nail salon. Collect a heart every time you visit, watch your card fill up, and enjoy a free treatment on us. No paper cards, no passwords, no fuss.
+
+COLLECT HEARTS, GET PAMPERED
+Every visit earns you a heart on your loyalty card. Collect 9 hearts and your 10th treatment is free. Whether you come in for a quick manicure, a fresh set of acrylics or a gel infill, every visit counts.
+
+SEE YOUR HEART APPEAR INSTANTLY
+Show your code at the desk and our team scans it. Your new heart appears on your phone straight away, so you always know exactly where you are. Your progress is shown at a glance on the home screen: how many hearts you have, and how many to go until your next treat.
+
+YOUR REWARD WAITS FOR YOU
+Card full but not ready to use your free treatment today? No problem. Keep collecting as normal. Your full card moves to Past cards marked READY TO CLAIM, and a fresh card starts with your next visit. Just let us know when you'd like to use it. You have 6 months to claim each reward, and the app shows you the date.
+
+SPECIAL PROMO CARDS
+From time to time we run limited-time offers with their own promo cards. They appear in the app automatically, alongside your main card, so you'll never miss one. Each one tells you how many visits it needs and when the offer ends.
+
+ALL YOUR CARDS IN ONE PLACE
+Your active cards, your rewards waiting to be claimed and every card you've finished and redeemed are all kept together, so you can look back on every visit.
+
+ONE CODE, NO PAPER
+Your personal code and QR code live in the app. No more lost or forgotten stamp cards, and nothing to print or carry.
+
+DISCOVER OUR SERVICES
+Browse everything we offer, with photos:
+• Manicures: shape, cuticle care and a classic polish finish
+• Gel & BIAB: long-lasting colour or strengthening Builder Gel
+• Acrylics & extensions: full sets and infills in the length and shape you love
+• Nail art: hand-painted designs, chrome, French tips and gems
+• Pedicures: soak, scrub and polish
+
+FIND US
+Our address, opening hours for every day of the week and our phone number are all in the app, so booking your next appointment is quick and easy.
+
+JOIN IN SECONDS
+Sign up with just your name and a phone number or email address. There's no password to remember and we never ask for payment details. You stay signed in on your phone, ready for your next visit.
+
+YOUR DATA, YOUR CHOICE
+We only keep what's needed to run your loyalty card: your name, your contact detail and your visits. You can delete your account and all its data at any time, right from the app.
+
+Download Pretty Pretty Rewards, show your code on your next visit and start collecting hearts today. We can't wait to see you.
 ```
 
 ## App content (Policy → App content)
