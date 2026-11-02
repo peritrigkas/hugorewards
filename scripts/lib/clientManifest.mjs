@@ -12,6 +12,7 @@ export const IDENTITY_PATHS = ["capacitor.config.json", "android"];
 const SLUG_RE = /^[a-z][a-z0-9-]*$/;
 const APP_ID_RE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i;
 const COLOR_RE = /^#[0-9a-f]{6}$/i;
+const VERSION_NAME_RE = /^\d+(\.\d+){0,3}$/;
 // An appId becomes a Java package name, so no segment can be a Java keyword.
 const JAVA_KEYWORDS = new Set(
   ("abstract assert boolean break byte case catch char class const continue default do double else enum " +
@@ -45,6 +46,17 @@ export function loadClientManifest(slug, { requireLogo = true } = {}) {
   const splashBackgroundColor = manifest.splashBackgroundColor || DEFAULT_BG_COLOR;
   assertValidColor(iconBackgroundColor);
   assertValidColor(splashBackgroundColor);
+  // Optional: a client's own Play version. Without them the build keeps the
+  // committed (Hugo) version in android/app/build.gradle.
+  if ((manifest.versionCode === undefined) !== (manifest.versionName === undefined)) {
+    throw new Error(`${manifestPath}: set "versionCode" and "versionName" together, or neither`);
+  }
+  if (manifest.versionCode !== undefined && !(Number.isInteger(manifest.versionCode) && manifest.versionCode > 0)) {
+    throw new Error(`${manifestPath}: "versionCode" must be a positive whole number`);
+  }
+  if (manifest.versionName !== undefined && !VERSION_NAME_RE.test(manifest.versionName)) {
+    throw new Error(`${manifestPath}: "versionName" must look like "1.0.0"`);
+  }
   const logoPath = join(dir, "logo.png");
   if (requireLogo && !existsSync(logoPath)) {
     throw new Error(`Missing ${logoPath} — add a square (1024x1024 recommended) source logo for this client.`);

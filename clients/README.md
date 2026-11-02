@@ -7,7 +7,8 @@ runtime branding (colors, copy, menu) instead.
 
 ```
 clients/<slug>/
-├── client.json   # appId, appName, tenantSlug, icon/splash background colors
+├── client.json   # appId, appName, tenantSlug, icon/splash background colors,
+│                 # and optionally versionCode + versionName (see below)
 └── logo.png      # square source logo, 1024x1024px or larger
 ```
 
@@ -37,6 +38,16 @@ tenant row, generates icon/splash assets from `logo.png`, and syncs
 `android/`. Builds are done **one client at a time** against that single
 `android/` project — the same manual, one-release-at-a-time workflow already
 used for Hugo (see the iOS CI deferral decision in the progress doc).
+
+## Version numbers
+
+Each client is its own Play app, so it has its own version. Set
+`"versionCode"` (a whole number, raised for every upload) and
+`"versionName"` (e.g. `"1.0.0"`) together in `client.json`, and `build-client`
+writes them into `android/app/build.gradle`. A new client starts at
+`1` / `"1.0.0"`. Without them the build keeps the committed version, which is
+Hugo's: `clients/hugo/client.json` sets none, so Hugo's version stays in
+`build.gradle` as before.
 
 ## The Hugo baseline and resetting
 
