@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
+import { clientConfig } from "../client.config";
+import { daysInMonth, formatBirthday, hasBirthday, isBirthdayLocked, MONTHS } from "../lib/birthday";
 import { isRewardReady } from "../lib/loyalty";
 import { claimUntil, formatDay, isPromoCardFull } from "../lib/promos";
 import { STAMPS_FOR_REWARD } from "../loyaltySettings";
@@ -37,13 +39,64 @@ function CardLine({ name, stamps, stampsForReward, note, full, canStamp, busy, o
   );
 }
 
+const select = { padding: "8px 10px", borderRadius: 10, border: "1px solid var(--c-lilac)", fontFamily: "Inter, sans-serif", fontSize: 13, background: "#fff" };
+
+// The customer's birthday, which staff can always correct (customers lock
+// theirs after two saves), and the birthday treat during their birthday week.
+function BirthdayBox({ customer: c, birthday, busy, onRedeem, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [month, setMonth] = useState(c.birthday_month ?? "");
+  const [day, setDay] = useState(c.birthday_day ?? "");
+  const save = async () => {
+    if (await onSave(Number(month), Number(day))) setEditing(false);
+  };
+  return (
+    <div data-testid="birthday-box" style={{ ...box, background: birthday.kind === "ready" ? "var(--c-gold)" : "#fff" }}>
+      {birthday.kind === "ready" && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+          <div style={{ fontSize: 13, color: "var(--c-dark)" }}>
+            <b>🎂 Birthday week! {clientConfig.gift.title}</b> · {clientConfig.gift.body}
+          </div>
+          <button data-testid="birthday-redeem" disabled={busy} onClick={onRedeem} style={{ ...pill, background: "var(--c-dark)", color: "#fff" }}>Redeem</button>
+        </div>
+      )}
+      {birthday.kind === "redeemed" && <div style={{ fontSize: 13, fontWeight: 600, color: "var(--c-dark)", marginBottom: 8 }}>🎂 Birthday treat given this year</div>}
+      {editing ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <select aria-label="Birthday day" value={day} onChange={(e) => setDay(e.target.value)} style={select}>
+            <option value="">Day</option>
+            {Array.from({ length: month ? daysInMonth(Number(month)) : 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select aria-label="Birthday month" value={month} onChange={(e) => { setMonth(e.target.value); if (Number(day) > daysInMonth(Number(e.target.value))) setDay(""); }} style={select}>
+            <option value="">Month</option>
+            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          </select>
+          <button disabled={!month || !day || busy} onClick={save} style={{ ...pill, background: "var(--c-dark)", color: "#fff" }}>Save</button>
+          <button onClick={() => setEditing(false)} style={{ ...pill, background: "var(--c-border)", color: "var(--c-dark)" }}>Cancel</button>
+        </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div data-testid="birthday-date" style={{ fontSize: 12, color: "var(--c-dark)" }}>
+            Birthday: {hasBirthday(c) ? <b>{formatBirthday(c)}</b> : "not saved"}{isBirthdayLocked(c) && " · locked for the customer"}
+          </div>
+          <button onClick={() => setEditing(true)} style={{ ...pill, background: "var(--c-border)", color: "var(--c-dark)" }}>{hasBirthday(c) ? "Correct" : "Add"}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Everything staff do for one customer: opened by scanning their code, typing
 // it, or tapping them in the list. Shows rewards waiting to be claimed, the
+// birthday (and treat), the
 // main card and any active promo card, the "possible earlier card" hint, and
 // Move stamps. Moving always keeps
 // the card on the customer's phone now, adds the other card's stamps to it
 // and removes the other card.
-export function CustomerView({ customer: c, promoCards, rewards, initialMessage = "", earlierCard, onBack, onStamp, onRedeem, onRedeemWaiting, onMoveCard }) {
+export function CustomerView({
+  customer: c, promoCards, rewards, birthday, initialMessage = "", earlierCard, onBack, onStamp, onRedeem, onRedeemWaiting, onRedeemBirthday, onSetBirthday,
+  onMoveCard,
+}) {
   const [moving, setMoving] = useState(false);
   const [newCode, setNewCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,6 +123,18 @@ export function CustomerView({ customer: c, promoCards, rewards, initialMessage 
   const redeemWaiting = async (reward) => {
     const error = await run(() => onRedeemWaiting(reward));
     setMessage(error ?? "✓ Reward redeemed");
+  };
+
+  const redeemBirthday = async () => {
+    const error = await run(() => onRedeemBirthday(c));
+    setMessage(error ?? `✓ ${clientConfig.gift.title} redeemed`);
+  };
+
+  // Resolves to true once saved.
+  const saveBirthday = async (month, day) => {
+    const error = await run(() => onSetBirthday(c, month, day));
+    setMessage(error ?? "✓ Birthday saved");
+    return !error;
   };
 
   const move = async (oldCode, targetCode) => {
@@ -107,6 +172,8 @@ export function CustomerView({ customer: c, promoCards, rewards, initialMessage 
           ))}
         </div>
       )}
+
+      <BirthdayBox customer={c} birthday={birthday} busy={busy} onRedeem={redeemBirthday} onSave={saveBirthday} />
 
       <CardLine
         name="Main card"

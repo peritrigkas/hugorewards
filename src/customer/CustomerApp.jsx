@@ -16,8 +16,8 @@ import { useSecretTap } from "./useSecretTap";
 
 export function CustomerApp({ onStaffAccess }) {
   const {
-    customer, loading, loggedOut, staffOnDevice, hasEarlierCard, today, promoCards, pastCards, newPromo,
-    join, saveDetails, logout, logBackIn, deleteAccount, signOutStaffOnDevice, dismissNewPromo,
+    customer, loading, loggedOut, staffOnDevice, hasEarlierCard, today, promoCards, pastCards, newPromo, birthday,
+    join, saveDetails, saveBirthday, logout, logBackIn, deleteAccount, signOutStaffOnDevice, dismissNewPromo,
   } = useCustomer();
   const [screen, setScreen] = useState("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -62,15 +62,15 @@ export function CustomerApp({ onStaffAccess }) {
       <TopBar onBack={subScreen ? handleBack : null} onMenu={() => setDrawerOpen(true)} onSecretTap={handleSecretTap} onAccount={() => setScreen("account")} />
       {hasEarlierCard && <EarlierCardBanner code={customer.code} />}
       {screen === "home" && (
-        <HomeScreen customer={customer} promoCards={promoCards} today={today} newPromo={newPromo} onDismissNewPromo={dismissNewPromo} goToRewards={() => setScreen("rewards")} />
+        <HomeScreen customer={customer} promoCards={promoCards} today={today} newPromo={newPromo} birthday={birthday} onDismissNewPromo={dismissNewPromo} goToRewards={() => setScreen("rewards")} goToGifts={() => setScreen("gifts")} />
       )}
       {screen === "rewards" && <RewardsHome goToCards={() => setScreen("cards")} goToGifts={() => setScreen("gifts")} />}
       {screen === "cards" && <LoyaltyCardDetail customer={customer} promoCards={promoCards} pastCards={pastCards} today={today} />}
-      {screen === "gifts" && <GiftsView />}
+      {screen === "gifts" && <GiftsView birthday={birthday} goToAccount={() => setScreen("account")} />}
       {screen === "scan" && <ScanCodeScreen customer={customer} />}
       {screen === "menu" && <MenuScreen />}
       {screen === "visit" && <VisitScreen />}
-      {screen === "account" && <AccountScreen customer={customer} onSave={saveDetails} onLogout={handleLogout} onDelete={handleDeleteAccount} />}
+      {screen === "account" && <AccountScreen customer={customer} onSave={saveDetails} onSaveBirthday={saveBirthday} onLogout={handleLogout} onDelete={handleDeleteAccount} />}
       <BottomNav screen={screen} navigate={setScreen} />
       <DrawerMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} navigate={setScreen} />
       {showPinPrompt && (

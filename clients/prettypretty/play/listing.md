@@ -75,7 +75,10 @@ Use the same answers as Hugo (same app, same backend):
   - Personal info → **Email address** and **Phone number** (the customer
     enters one or the other)
   - App activity → **App interactions** (stamps, redeemed and waiting
-    rewards)
+    rewards, birthday treats)
+- From the birthday treat (Pretty Pretty 1.0.1, Hugo 1.0.7): Personal info →
+  **Other info**, collected, not shared, for **app functionality**, and
+  **optional** (birthday day and month, added in My Account)
 - Fraud prevention: the sign-up bot check (Cloudflare Turnstile) checks the
   device/browser. Cloudflare and Supabase act as service providers, which
   Play doesn't count as "sharing".

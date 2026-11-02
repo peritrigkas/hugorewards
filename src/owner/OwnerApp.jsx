@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { clientConfig } from "../client.config";
+import { birthdayTreat } from "../lib/birthday";
 import { findEarlierCards, isRewardReady } from "../lib/loyalty";
 import { activePromoCards, isPromoCardFull, runningPromo, scanTarget, shopToday, waitingRewards } from "../lib/promos";
 import { getScanSetting, setScanSetting } from "../lib/scanSetting";
@@ -30,7 +31,10 @@ function ScanSwitch({ promo, setting, onChange }) {
 }
 
 export function OwnerApp({ onExit }) {
-  const { session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, moveCard, savePromo, deletePromo, signOut } = useOwnerCustomers();
+  const {
+    session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, redeemBirthday, setBirthday, moveCard, savePromo, deletePromo,
+    signOut,
+  } = useOwnerCustomers();
   const [page, setPage] = useState("customers");
   const [openCode, setOpenCode] = useState(null);
   // Shown in the customer view when a scan opened it after stamping.
@@ -45,6 +49,7 @@ export function OwnerApp({ onExit }) {
   const promoCardsOf = (c) => activePromoCards(cards.promos, stampsByCustomer[c.id] ?? {}, today);
   const rewards = waitingRewards(cards.history);
   const rewardsOf = (c) => rewards.filter((h) => h.customer_id === c.id);
+  const birthdayOf = (c) => birthdayTreat(c, cards.birthdayTreats.filter((t) => t.customer_id === c.id), today);
 
   const changeScanSetting = (setting) => {
     setScanSetting(setting);
@@ -55,7 +60,8 @@ export function OwnerApp({ onExit }) {
   // card that keeps the reward waiting and starts a new card. It opens the
   // customer view instead when staff asked for that. When the customer then
   // has a reward waiting, it also opens the view after stamping, so staff can
-  // remind them before they pay (and redeem it there).
+  // remind them before they pay (and redeem it there). The same goes for a
+  // birthday treat during the customer's birthday week.
   const handleScan = async (code) => {
     const customer = customers.find((c) => c.code === code);
     if (!customer) return { message: "No customer found for that code" };
@@ -69,8 +75,12 @@ export function OwnerApp({ onExit }) {
       return { message: "" };
     }
     const result = await stamp(customer, target.kind === "promo" ? promo : null);
-    if (result.ok && (full || rewardsOf(customer).length > 0)) {
-      setScanMessage(full ? `${result.message}. Their full card is now a reward waiting` : result.message);
+    const birthdayReady = birthdayOf(customer).kind === "ready";
+    if (result.ok && (full || rewardsOf(customer).length > 0 || birthdayReady)) {
+      const notes = [result.message];
+      if (full) notes.push("Their full card is now a reward waiting");
+      if (birthdayReady) notes.push(`It's their birthday week: give them their ${clientConfig.gift.title}!`);
+      setScanMessage(notes.join(". "));
       setOpenCode(code);
     }
     return result;
@@ -98,12 +108,15 @@ export function OwnerApp({ onExit }) {
         customer={openCustomer}
         promoCards={promoCardsOf(openCustomer)}
         rewards={rewardsOf(openCustomer)}
+        birthday={birthdayOf(openCustomer)}
         initialMessage={scanMessage}
         earlierCard={earlierCards[openCustomer.id]}
         onBack={() => { setOpenCode(null); setScanMessage(""); }}
         onStamp={stamp}
         onRedeem={redeem}
         onRedeemWaiting={redeemWaiting}
+        onRedeemBirthday={redeemBirthday}
+        onSetBirthday={setBirthday}
         onMoveCard={moveCard}
       />
     );
@@ -113,7 +126,7 @@ export function OwnerApp({ onExit }) {
         {promo && <ScanSwitch promo={promo} setting={scanSetting} onChange={changeScanSetting} />}
         <ScanPanel onFoundCode={handleScan} />
         {customers.map((c) => (
-          <CustomerRow key={c.code} customer={c} promoCards={promoCardsOf(c)} rewardCount={rewardsOf(c).length} hasEarlierCard={Boolean(earlierCards[c.id])} onOpen={() => { setScanMessage(""); setOpenCode(c.code); }} />
+          <CustomerRow key={c.code} customer={c} promoCards={promoCardsOf(c)} rewardCount={rewardsOf(c).length} birthdayReady={birthdayOf(c).kind === "ready"} hasEarlierCard={Boolean(earlierCards[c.id])} onOpen={() => { setScanMessage(""); setOpenCode(c.code); }} />
         ))}
       </>
     );

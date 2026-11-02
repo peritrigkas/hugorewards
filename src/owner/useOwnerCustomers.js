@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { clientConfig } from "../client.config";
-import { addStamp, deletePromo as deletePromoInDb, listHistory, listPromos, listPromoStamps, redeemCard, redeemWaitingReward, savePromo as savePromoInDb } from "../lib/cards";
-import { listCustomers, moveCard as moveCardInDb, subscribeToAllCustomers } from "../lib/customers";
+import {
+  addStamp, deletePromo as deletePromoInDb, listBirthdayTreats, listHistory, listPromos, listPromoStamps, redeemBirthdayTreat, redeemCard,
+  redeemWaitingReward, savePromo as savePromoInDb,
+} from "../lib/cards";
+import { listCustomers, moveCard as moveCardInDb, subscribeToAllCustomers, updateBirthday } from "../lib/customers";
 import { isStaffSession } from "../lib/customerAuth";
 import { getStaffSession, onStaffSessionChange, signOutStaff } from "../lib/staffAuth";
 
-const NO_CARDS = { promos: [], promoStamps: [], history: [] };
+const NO_CARDS = { promos: [], promoStamps: [], history: [], birthdayTreats: [] };
 
 // The staff session and, once signed in, the shop's customers, promos, promo
-// stamps and redeemed cards, kept live.
+// stamps, redeemed cards and birthday treats, kept live.
 // session: undefined = still checking, null = no staff login, object = signed in.
 // A customer's anonymous login on this device doesn't count as staff;
 // customerOnDevice reports it so sign-in can warn that it will be replaced.
@@ -27,11 +30,16 @@ export function useOwnerCustomers() {
 
   // A failed read keeps what was there before.
   const fetchAll = async () => {
-    const [data, promos, promoStamps, history] = await Promise.all([
-      listCustomers(), listPromos(clientConfig.tenantId), listPromoStamps(), listHistory(),
+    const [data, promos, promoStamps, history, birthdayTreats] = await Promise.all([
+      listCustomers(), listPromos(clientConfig.tenantId), listPromoStamps(), listHistory(), listBirthdayTreats(),
     ]);
     if (data) setCustomers(data);
-    setCards((prev) => ({ promos: promos ?? prev.promos, promoStamps: promoStamps ?? prev.promoStamps, history: history ?? prev.history }));
+    setCards((prev) => ({
+      promos: promos ?? prev.promos,
+      promoStamps: promoStamps ?? prev.promoStamps,
+      history: history ?? prev.history,
+      birthdayTreats: birthdayTreats ?? prev.birthdayTreats,
+    }));
   };
 
   // Promo stamps and redemptions also touch the customer's row, so this one
@@ -65,6 +73,19 @@ export function useOwnerCustomers() {
     return error;
   };
 
+  const redeemBirthday = async (customer) => {
+    const error = await redeemBirthdayTreat(customer.code);
+    if (!error) await fetchAll();
+    return error;
+  };
+
+  // Staff can always correct a birthday (month and day, or both null).
+  const setBirthday = async (customer, month, day) => {
+    const { error } = await updateBirthday(customer.code, month, day);
+    if (!error) await fetchAll();
+    return error ?? null;
+  };
+
   const moveCard = async (oldCode, newCode) => {
     const error = await moveCardInDb(oldCode, newCode);
     if (!error) await fetchAll();
@@ -87,5 +108,8 @@ export function useOwnerCustomers() {
     await signOutStaff();
   };
 
-  return { session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, moveCard, savePromo, deletePromo, signOut };
+  return {
+    session, customerOnDevice, customers, cards, loading, stamp, redeem, redeemWaiting, redeemBirthday, setBirthday, moveCard, savePromo, deletePromo,
+    signOut,
+  };
 }

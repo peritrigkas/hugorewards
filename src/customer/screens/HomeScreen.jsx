@@ -4,6 +4,7 @@ import { clientConfig } from "../../client.config";
 import { STAMPS_FOR_REWARD } from "../../loyaltySettings";
 import { BrandMark } from "../../components/BrandMark";
 import { STAMP_ICONS } from "../../components/StampCard";
+import { formatDay } from "../../lib/promos";
 import { NewPromoBanner, PromoCard } from "../PromoCards";
 
 // Hugo keeps its ☕ / 🐮 emoji; other tenants get their stamp icon and logo.
@@ -19,7 +20,7 @@ function StatBlock({ value, label, emoji }) {
   );
 }
 
-function Greeting({ customer, cardCount }) {
+function Greeting({ customer, cardCount, giftCount }) {
   return (
     <div style={{ padding: "28px 20px 20px", textAlign: "center" }}>
       <div style={{ fontFamily: "Baloo 2, sans-serif", fontSize: 24, color: "var(--c-dark)", marginBottom: 4 }}>
@@ -31,7 +32,7 @@ function Greeting({ customer, cardCount }) {
       <div style={{ display: "flex" }}>
         <StatBlock value={customer.stamps} label="Stamps" emoji={StatStampIcon ? <StatStampIcon size={20} color="var(--c-dark)" /> : "☕"} />
         <div style={{ width: 1, background: "var(--c-divider)" }} />
-        <StatBlock value="0" label="Gift List" emoji="🎁" />
+        <StatBlock value={giftCount} label="Gift List" emoji="🎁" />
         <div style={{ width: 1, background: "var(--c-divider)" }} />
         <StatBlock value={cardCount} label="Cards" emoji={clientConfig.mark === "cow" && !clientConfig.logoUrl ? "🐮" : <BrandMark size={22} />} />
       </div>
@@ -164,11 +165,25 @@ function PromoCards({ cards, today }) {
   );
 }
 
-export function HomeScreen({ customer, promoCards, today, newPromo, onDismissNewPromo, goToRewards }) {
+// During the birthday week, until the treat is redeemed.
+function BirthdayBanner({ birthday, onOpen }) {
+  return (
+    <div data-testid="birthday-banner" onClick={onOpen} style={{ margin: "16px 20px 0", background: "var(--c-gold)", borderRadius: 16, padding: "14px 16px", fontFamily: "Inter, sans-serif", cursor: "pointer" }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--c-dark)", marginBottom: 4 }}>🎂 Happy birthday!</div>
+      <div style={{ fontSize: 13, color: "var(--c-dark)" }}>
+        Your {clientConfig.gift.title} is ready until {formatDay(birthday.until)}. Show your code at the desk.
+      </div>
+    </div>
+  );
+}
+
+export function HomeScreen({ customer, promoCards, today, newPromo, birthday, onDismissNewPromo, goToRewards, goToGifts }) {
+  const birthdayReady = birthday.kind === "ready";
   return (
     <div>
+      {birthdayReady && <BirthdayBanner birthday={birthday} onOpen={goToGifts} />}
       {newPromo && <NewPromoBanner promo={newPromo} onDismiss={onDismissNewPromo} />}
-      <Greeting customer={customer} cardCount={1 + promoCards.length} />
+      <Greeting customer={customer} cardCount={1 + promoCards.length} giftCount={birthdayReady ? 1 : 0} />
       <PromoCards cards={promoCards} today={today} />
       <HeroBanner />
       <SwirlDivider />
